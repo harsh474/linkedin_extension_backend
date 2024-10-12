@@ -20,10 +20,10 @@ const app = express();
 const PORT = 3001;
 
 app.use(express.json());
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 
-app.use(cors({
-    origin: '*'
-}));
 SECRET_KEY = process.env.SECRET_KEY;
 app.get('/', (req, res) => {
     res.send("Hello World");
@@ -270,7 +270,10 @@ app.post('/signupform', async (req, res) => {
 app.post('/login', async (req, res) => {
     try {
         const { email, pass } = req.body;
-
+         if(req.cookies.token){  
+            console.log("User is already login",req.cookies) ;
+          return  res.send("User is already login") ;
+         }
         // Find the user by email
         const user = await usercollection.findOne({ email: email });
         if (!user) {
@@ -287,7 +290,7 @@ app.post('/login', async (req, res) => {
 
         // Create a JWT token
         const token = jwt.sign({ email: user.email }, SECRET_KEY);
-
+           res.cookie("token",token);
         // Set the token as a cookie and send a successful response
         res.status(200).json({ message: "Successfully logged in", "token": token });
 
