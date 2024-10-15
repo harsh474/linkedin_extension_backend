@@ -300,6 +300,10 @@ app.post('/login', async (req, res) => {
     }
 });
 
+app.post('/logout',(req,res)=>{ 
+    res.clearCookie('token'); 
+    res.status(200).send("User logout successfully"); 
+})
 
 // Start the server
 app.listen(PORT, () => {
