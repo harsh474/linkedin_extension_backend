@@ -300,7 +300,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-app.post('/logout',(req,res)=>{ 
+app.get('/logout',(req,res)=>{ 
     res.clearCookie('token'); 
     res.status(200).send("User logout successfully"); 
 })
