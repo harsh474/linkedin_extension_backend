@@ -22,7 +22,9 @@ const PORT = 3001;
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({  origin:['http://localhost:3000','chrome-extension://mggcnpciocmgadnfpkooinmkgikobmoi'], 
+    credentials:true,            //access-control-allow-credentials:true
+    optionSuccessStatus:200}));
 
 SECRET_KEY = process.env.SECRET_KEY;
 app.get('/', (req, res) => {
@@ -64,7 +66,7 @@ app.post('/chatgpt', authenticateToken, async (req, res) => {
     const userMessage = req.body.message || "";
     console.log("entered in chatgpt")
     try {
-        // Fetch user information
+        // Fetch user information from database
         const applicantData = await usercollection.find({ email: req.user.email }).limit(1).toArray(); 
         const currentcount = applicantData[0].currentcount ; 
         const maxxcount = applicantData[0].maxxcount ; 
