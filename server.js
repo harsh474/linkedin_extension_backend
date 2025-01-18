@@ -19,8 +19,8 @@ mongoose.connect('mongodb://localhost:27017/email')
 const emailcollection = mongoose.connection.collection('email');
 const usercollection = mongoose.connection.collection('user')
 const app = express();
-const PORT = 3001;
 
+const PORT = process.env.PORT ;
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
@@ -260,8 +260,6 @@ const authenticateToken = async (req, res, next) => {
 
 app.post('/chatgpt', authenticateToken, async (req, res) => {
   const userMessage = req.body.message ||"" ; 
-  
-  
   try {
       // Fetch user information from database
       const applicantData = await usercollection.find({ email: req.user.email }).limit(1).toArray();
