@@ -423,7 +423,11 @@ app.post('/login', async (req, res) => {
 
         // Create a JWT token
         const token = jwt.sign({ email: user.email }, SECRET_KEY);
-        res.cookie("token",token);
+        res.cookie("token",token,{
+  httpOnly: true,  // Prevents client-side access to the cookie
+  secure: true,    // Ensures the cookie is only sent over HTTPS
+  sameSite: "none" // Required for cross-origin cookies
+});
         // Set the token as a cookie and send a successful response
         res.status(200).json({ message: "Successfully logged in", "token": token });
 
