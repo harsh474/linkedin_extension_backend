@@ -1,36 +1,42 @@
-const express = require("express");
-const axios = require("axios");
-const dotenv = require("dotenv");
-const cors = require('cors');
-const mongoose = require('mongoose')
-const jwt = require('jsonwebtoken')
-const bcrypt = require("bcryptjs")
-const cookieParser = require('cookie-parser')
-dotenv.config();  // Load environment variables
-const Razorpay = require('razorpay');
-const path = require('path');
-const fs = require('fs');
-const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
+  const express = require("express");
+  const axios = require("axios");
+  const dotenv = require("dotenv");
+  const cors = require('cors');
+  const mongoose = require('mongoose')
+  const jwt = require('jsonwebtoken')
+  const bcrypt = require("bcryptjs")
+  const cookieParser = require('cookie-parser')
+  dotenv.config();  // Load environment variables
+  const Razorpay = require('razorpay');
+  const path = require('path');
+  
+  const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
+  let mongo_url = "mongodb://localhost:27017/email"   ;
+   mongo_url = "mongodb+srv://harshrajput1101:E2TPBMGkFXe1nwbh@extensionstorage.sb2pg.mongodb.net/email?retryWrites=true&w=majority&appName=Extensionstorage";
 
-// Connect to MongoDB using Mongoose
-mongoose.connect('mongodb://localhost:27017/email')
-    .then(() => console.log("succesfully connected to mongodb databse "))
-    .catch((error) => console.log("Cant connect to databse "))
-const emailcollection = mongoose.connection.collection('email');
-const usercollection = mongoose.connection.collection('user')
-const app = express();
+  
+ 
+  // mongoose.connect('mongodb://localhost:27017/email')
+  mongoose.connect(`${mongo_url}`)
+      .then(() => console.log("succesfully connected to mongodb databse "))
+      .catch((error) => console.log("Cant connect to databse "))
+      
+  const emailcollection = mongoose.connection.collection('email');
+  const usercollection = mongoose.connection.collection('user') ; 
+  
+  const app = express();
 
-const PORT = process.env.PORT ;
-app.use(express.json());
-app.use(cookieParser());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors({  origin:['http://localhost:3000','chrome-extension://mggcnpciocmgadnfpkooinmkgikobmoi'], 
-    credentials:true,            //access-control-allow-credentials:true
-    optionSuccessStatus:200}));
-let SECRET_KEY = process.env.SECRET_KEY;
-app.get('/', (req, res) => {
-    res.send("Hello World");
-});
+  const PORT = process.env.PORT||3001 ;
+  app.use(express.json());
+  app.use(cookieParser());
+  app.use(express.urlencoded({ extended: true }));
+  app.use(cors({  origin:['http://localhost:3000','chrome-extension://mggcnpciocmgadnfpkooinmkgikobmoi'], 
+      credentials:true,            //access-control-allow-credentials:true
+      optionSuccessStatus:200}));
+  let SECRET_KEY = process.env.SECRET_KEY;
+  app.get('/', (req, res) => {
+      res.send("Hello World");
+  });
 
 
 
@@ -391,23 +397,28 @@ app.post('/signupform', async (req, res) => {
 
 
 app.post('/login', async (req, res) => {
-    try {
+    try { 
+      
         const { email, pass } = req.body;
          if(req.cookies.token){  
-            console.log("User is already login",req.cookies) ;
+         
           return  res.send("User is already login") ;
          }
         // Find the user by email
-        const user = await usercollection.findOne({ email: email });
-        if (!user) {
+        const user = await usercollection.findOne({ email: email }); 
+      
+        if (!user) {    
             return res.status(404).json({ error: "You are not registered, kindly register." });
         }
         if (user.password !== pass) {
             return res.status(401).json({ error: "Password is not correct" });
         }
         // Compare the hashed password with the password from the request
-        //   const isMatch = await bcrypt.compare(pass, user.pass);
-        //   if (!isMatch) {
+      
+
+        //   const isMatch = await bcrypt.compare(pass, user.password);
+        //   if (!isMatch) { 
+        //     console.log("Invalid credentials")
         //     return res.status(403).json({ error: "Invalid credentials" });
         //   }
 
@@ -415,7 +426,7 @@ app.post('/login', async (req, res) => {
         const token = jwt.sign({ email: user.email }, SECRET_KEY);
            res.cookie("token",token);
         // Set the token as a cookie and send a successful response
-        res.status(200).json({ message: "Successfully logged in", "token": token });
+        res.status(200).json({ message: "Successfully logged in", "token": "token" });
 
     } catch (error) {
         console.error(error);
@@ -436,57 +447,10 @@ const razorpay = new Razorpay({
     key_secret: 'XG4wriFTgDEfWdjIEzpcgS1V',
   });
   
-  // Function to read data from JSON file
-  const readData = () => {
-    if (fs.existsSync('orders.json')) {
-      const data = fs.readFileSync('orders.json');
-      return JSON.parse(data);
-    }
-    return [];
-  };
+ 
+ 
   
-  // Function to write data to JSON file
-  const writeData = (data) => {
-    fs.writeFileSync('orders.json', JSON.stringify(data, null, 2));
-  };
-  
-  // Initialize orders.json if it doesn't exist
-  if (!fs.existsSync('orders.json')) {
-    writeData([]);
-  }
-  
-  // Route to handle order creation
-  app.post('/create-order', async (req, res) => {
-    try {
-      const { amount, currency, receipt, notes } = req.body;
-  
-      const options = {
-        amount: amount * 100, // Convert amount to paise
-        currency,
-        receipt,
-        notes,
-      };
-  
-      const order = await razorpay.orders.create(options);
-      
-      // Read current orders, add new order, and write back to the file
-      const orders = readData();
-      orders.push({
-        order_id: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        receipt: order.receipt,
-        status: 'created',
-      });
-      writeData(orders);
-  
-      res.json(order); // Send order details to frontend, including order ID
-    } catch (error) {
-      console.error(error);
-      res.status(500).send('Error creating order');
-    }
-  });
-  
+ 
   // Route to serve the success page
   app.get('/payment-success', (req, res) => {
     res.sendFile(path.join(__dirname, 'success.html'));
