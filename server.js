@@ -398,11 +398,11 @@ app.post('/signupform', async (req, res) => {
 app.post('/login', async (req, res) => {
     try { 
        
-        res.send("you are connected")
+        return res.send("you are connected") ;
         const { email, pass } = req.body;
          if(req.cookies.token){  
          
-          return  res.send("User is already login") ;
+          return  res.status(200).json({"message":"User is already login"}) ;
          }
         // Find the user by email
         const user = await usercollection.findOne({ email: email }); 
