@@ -12,8 +12,7 @@
   
   const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
   let mongo_url = "mongodb://localhost:27017/email"   ;
-   mongo_url = "mongodb+srv://harshrajput1101:E2TPBMGkFXe1nwbh@extensionstorage.sb2pg.mongodb.net/email?retryWrites=true&w=majority&appName=Extensionstorage";
-
+    mongo_url = process.env.Mongo_url
   
  
   // mongoose.connect('mongodb://localhost:27017/email')
@@ -398,7 +397,8 @@ app.post('/signupform', async (req, res) => {
 
 app.post('/login', async (req, res) => {
     try { 
-      
+       
+        res.send("you are connected")
         const { email, pass } = req.body;
          if(req.cookies.token){  
          
