@@ -398,7 +398,6 @@ app.post('/signupform', async (req, res) => {
 app.post('/login', async (req, res) => {
     try { 
        
-        return res.send("you are connected") ;
         const { email, pass } = req.body;
          if(req.cookies.token){  
          
@@ -424,9 +423,9 @@ app.post('/login', async (req, res) => {
 
         // Create a JWT token
         const token = jwt.sign({ email: user.email }, SECRET_KEY);
-           res.cookie("token",token);
+        res.cookie("token",token);
         // Set the token as a cookie and send a successful response
-        res.status(200).json({ message: "Successfully logged in", "token": "token" });
+        res.status(200).json({ message: "Successfully logged in", "token": token });
 
     } catch (error) {
         console.error(error);
