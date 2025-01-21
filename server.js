@@ -37,7 +37,7 @@
       res.send("Hello World");
   });
 
-
+  app.set('trust proxy', 1) // trust first proxy
 
 
 const authenticateToken = async (req, res, next) => {
