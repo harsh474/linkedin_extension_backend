@@ -445,6 +445,19 @@ app.get('/logout',(req,res)=>{
 });
 
 
+app.get('/check-login',(req,res)=>{
+    const  token = req.cookies.token;
+    if(token){ 
+        res.status(200).send({"message":"true"}) ;
+    }
+    else{ 
+        res.status(200).send({"message":"false"}) ;
+    }
+})
+
+
+
+
 
 // Replace with your Razorpay credentials
 const razorpay = new Razorpay({
