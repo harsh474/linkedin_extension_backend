@@ -451,7 +451,7 @@ app.get('/check-login',(req,res)=>{
         res.status(200).send({"message":"true"}) ;
     }
     else{ 
-        res.status(200).send({"message":"false"}) ;
+        res.status(400).send({"message":"false"}) ;
     }
 })
 
