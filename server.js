@@ -445,7 +445,7 @@ app.get('/logout',(req,res)=>{
 });
 
 
-app.get('/check-login',(req,res)=>{
+app.get('/check-login',authenticateToken,(req,res)=>{
     const  token = req.cookies.token;
     if(token){ 
         res.status(200).send({"message":"true"}) ;
