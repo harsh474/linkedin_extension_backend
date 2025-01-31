@@ -41,9 +41,9 @@
 
 
 const authenticateToken = async (req, res, next) => {
-    const authHeader = req.headers["authorization"]; // Ensure header is lowercase
-    const token = authHeader && authHeader.split(" ")[1];
-
+    // const authHeader = req.headers["authorization"]; // Ensure header is lowercase
+    // const token = authHeader && authHeader.split(" ")[1];  
+   const token = req.cookies.token ;
     if (!token) {
         return res.status(401).json("You are not logged in");
     }
@@ -56,7 +56,7 @@ const authenticateToken = async (req, res, next) => {
 
             // If the token is expired
             if (error.name === "TokenExpiredError") {
-                return res.status(401).json("Token expired, please login again.");
+                return res.status(498).json("Token expired, please login again.");
             }
 
             return res.status(401).json("Invalid token, please login again.");
