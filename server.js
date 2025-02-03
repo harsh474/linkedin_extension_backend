@@ -43,9 +43,10 @@
 const authenticateToken = async (req, res, next) => {
     // const authHeader = req.headers["authorization"]; // Ensure header is lowercase
     // const token = authHeader && authHeader.split(" ")[1];  
-   const token = req.cookies.token ;
+    const  token = req.cookies.token; 
+    console.log("token",token);
     if (!token) {
-        return res.status(401).json("You are not logged in");
+        return res.status(401).json("You are not logged in",token);
     }
 
     console.log("Authentication in progress...");
