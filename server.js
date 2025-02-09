@@ -391,7 +391,7 @@ If any information is missing in the post, use 'N/A'. Ensure the response is a c
 
     } catch (error) {
         console.error("Error:", error);
-        res.status(500).send("Error calling ChatGPT API");
+        res.status(500).send("Error calling ChatGPT API",error);
     }
 });
 
