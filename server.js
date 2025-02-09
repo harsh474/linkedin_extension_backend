@@ -12,7 +12,7 @@ const path = require('path');
 
 const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
 let mongo_url = "mongodb://localhost:27017/email";
-// mongo_url = process.env.Mongo_url
+mongo_url = process.env.Mongo_url
 
 
 // mongoose.connect('mongodb://localhost:27017/email')
