@@ -12,7 +12,7 @@ const path = require('path');
 
 const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
 let mongo_url = "mongodb://localhost:27017/email";
-mongo_url = process.env.Mongo_url
+// mongo_url = process.env.Mongo_url
 
 
 // mongoose.connect('mongodb://localhost:27017/email')
@@ -47,10 +47,12 @@ app.set('trust proxy', 1) // trust first proxy
 const authenticateToken = async (req, res, next) => {
     // const authHeader = req.headers["authorization"]; // Ensure header is lowercase
     // const token = authHeader && authHeader.split(" ")[1];  
-    const token = req.cookies.token;
-    console.log("token", token);
+    let token = req.cookies.token;
+    // token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhhcnNocmFqcHV0MTEwMUBnbWFpbC5jb20iLCJpYXQiOjE3MzczOTYzODV9.aw-4Umu9f0BOsZS__FM433AfLTQ5dM7QLEiEjh0IwZs" ;
+    // console.log("token", token);
+
     if (!token) {
-        return res.status(401).json("You are not logged in", token);
+        return res.status(401).json({"You are not logged in": token});
     }
 
     console.log("Authentication in progress...");
@@ -269,7 +271,13 @@ const authenticateToken = async (req, res, next) => {
 
 
 app.post('/chatgpt', authenticateToken, async (req, res) => {
-    const userMessage = req.body.message || "";
+    console.log("calling chatgptapi")
+    let userMessage = req.body.message || ""; 
+        let temp  = userMessage[0].content;  
+        userMessage = String(temp)
+        // userMessage = "HI my name is HArsh Rajput";
+    console.log("userMessage",userMessage); 
+
     try {
         // Fetch user information from database
         const applicantData = await usercollection.find({ email: req.user.email }).limit(1).toArray();
@@ -277,7 +285,7 @@ app.post('/chatgpt', authenticateToken, async (req, res) => {
         const maxxcount = applicantData[0].maxxcount;
 
         if (currentcount >= maxxcount) {
-            return res.status(501).json({ "message": "You have hit your current limit. Please recharge!" });
+            return res.status(501).json({ "message": "You have hit your current limit. Please Upgrade!" });
         }
 
         const Applicant_information = {
