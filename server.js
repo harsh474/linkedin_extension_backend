@@ -274,8 +274,8 @@ app.post('/chatgpt', authenticateToken, async (req, res) => {
     console.log("calling chatgptapi")
     let userMessage = req.body.message || ""; 
         let temp  = userMessage[0].content;  
-        userMessage = String(temp)
-        // userMessage = "HI my name is HArsh Rajput";
+        // userMessage = String(temp)
+        userMessage = "HI my name is HArsh Rajput";
     console.log("userMessage",userMessage); 
 
     try {
