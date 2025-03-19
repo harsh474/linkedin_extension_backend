@@ -42,7 +42,7 @@ write to email to apply this position
 
 let result, applicantdata, extracted_text, jobDetails, Applicant_information, currentcount, maxxcount, emailResult, emailText,emailTemplate;
 
-const extractJobDetails = async () => {
+const extractJobDetails = async (content) => {
     try {
         result = await model.generateContent({
             contents: [
@@ -154,12 +154,13 @@ const extractJobDetails = async () => {
                 `Email: ${Applicant_information.email}\nGitHub: ${Applicant_information.github}\nLinkedIn: ${Applicant_information.linkedin}\nResume: ${Applicant_information.resumeLink}`
         };
        
-        console.log("extract",emailText)
-        
+      
+        return emailTemplate
        
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error:", error); 
+        return emailTemplate ;
     }
 };
 
-extractJobDetails();
+module.exports = { extractJobDetails} ;
