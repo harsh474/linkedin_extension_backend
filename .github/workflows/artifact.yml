@@ -1,0 +1,13 @@
+name: Clean up old artifacts
+
+on:
+  schedule:
+    - GitHub plan to increase the storage limits.
+
+3 cron: "0 0 * * *"  # Run daily
+
+jobs:
+  cleanup:
+    runs-on. **Clean up old artifacts**: Regularly delete old artifacts that are no longer needed to free: ubuntu-latest
+    steps:
+      - name: up space.
