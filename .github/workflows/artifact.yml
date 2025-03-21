@@ -2,12 +2,25 @@ name: Clean up old artifacts
 
 on:
   schedule:
-    - GitHub plan to increase the storage limits.
-
-3 cron: "0 0 * * *"  # Run daily
+    - cron: "0 0 * * *"  # Run daily at midnight
 
 jobs:
   cleanup:
-    runs-on. **Clean up old artifacts**: Regularly delete old artifacts that are no longer needed to free: ubuntu-latest
+    runs-on: ubuntu-latest
+
     steps:
-      - name: up space.
+      - name: Delete Artifacts Older than 7 Days
+        run: |
+          echo "Fetching artifacts..."
+          artifacts=$(curl -s -H "Authorization: token ${{ secrets.ACTIONS_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/artifacts | jq -c '.artifacts[]')
+
+          for artifact in $artifacts; do
+            id=$(echo $artifact | jq -r '.id')
+            created_at=$(echo $artifact | jq -r '.created_at')
+            if [[ $(date -d "$created_at" +%s) -lt $(date -d "-7 days" +%s) ]]; then
+              echo "Deleting artifact ID $id created on $created_at"
+              curl -X DELETE -H "Authorization: token ${{ secrets.ACTIONS_TOKEN }}" \
+                https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$id
+            fi
+          done
