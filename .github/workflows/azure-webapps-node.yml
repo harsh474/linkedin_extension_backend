@@ -19,7 +19,7 @@
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "third" ]
   workflow_dispatch:
 
 env:
