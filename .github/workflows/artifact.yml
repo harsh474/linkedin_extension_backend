@@ -1,26 +1,49 @@
-name: Clean up old artifacts
+name: Clean Up Old Artifacts
 
 on:
   schedule:
     - cron: "0 0 * * *"  # Run daily at midnight
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install jq (if not available)
+        run: sudo apt-get install -y jq
+
       - name: Delete Artifacts Older than 7 Days
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
         run: |
           echo "Fetching artifacts..."
-          artifacts=$(curl -s -H "Authorization: token ${{ secrets.ACTIONS_TOKEN }}" \
+          
+          # Get all artifacts
+          artifacts=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             https://api.github.com/repos/${{ github.repository }}/actions/artifacts | jq -c '.artifacts[]')
 
+          # Check if artifacts exist
+          if [[ -z "$artifacts" ]]; then
+            echo "No artifacts found."
+            exit 0
+          fi
+
+          # Process and delete artifacts older than 7 days
           for artifact in $artifacts; do
             id=$(echo $artifact | jq -r '.id')
             created_at=$(echo $artifact | jq -r '.created_at')
-            if [[ $(date -d "$created_at" +%s) -lt $(date -d "-7 days" +%s) ]]; then
+            
+            # Convert created_at to timestamp
+            created_at_ts=$(date -d "$created_at" +%s)
+            seven_days_ago=$(date -d "-7 days" +%s)
+
+            if [[ $created_at_ts -lt $seven_days_ago ]]; then
               echo "Deleting artifact ID $id created on $created_at"
-              curl -X DELETE -H "Authorization: token ${{ secrets.ACTIONS_TOKEN }}" \
+              curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
                 https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$id
+            else
+              echo "Skipping artifact ID $id (created on $created_at)"
             fi
           done
+
