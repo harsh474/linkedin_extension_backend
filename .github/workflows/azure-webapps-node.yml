@@ -54,11 +54,6 @@ jobs:
         name: node-app
         path: .
         
-    - name: Delete all old artifacts
-      uses: geekyeggo/delete-artifact@v2
-      with:
-        name: '*'  # Deletes all artifacts
-
   deploy:
     permissions:
       contents: none
