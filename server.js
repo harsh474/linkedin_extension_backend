@@ -69,9 +69,8 @@ const authenticateToken = async (req, res, next) => {
 app.post('/chatgpt', authenticateToken, async (req, res) => {
   
     let userMessage = req.body.message || "";  
-        let temp  = userMessage[0].content;   
         userMessage = String(temp)
-        // userMessage = "HI my name is HArsh Rajput";
+        userMessage = "HI my name is HArsh Rajput";
 
     const emailTemplate = await extractJobDetails(userMessage) ;   
 
