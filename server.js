@@ -539,8 +539,6 @@ app.listen(PORT, () => {
 //         res.status(500).send("Error calling ChatGPT API");
 //     }
 // });
-<<<<<<< HEAD
-=======
 
 
 app.post('/chatgpt', authenticateToken, async (req, res) => {
@@ -815,4 +813,3 @@ app.post('/payment/checkout', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
->>>>>>> af1ca1ed16b241caf2a203629c2fa3794b405b47
