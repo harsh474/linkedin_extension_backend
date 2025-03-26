@@ -18,6 +18,7 @@ app.use(cors({
     optionSuccessStatus: 200
 }));
 const {createOrder,verifyPayment} = require('./Controllers/razorpayController') ;
+const {payment_collection} = require('./Controllers/payment') ;
 const {extractJobDetails} = require( './googleapi') ; 
 const { usercollection } = require('./db');
 
@@ -266,7 +267,7 @@ app.get('/check-login', async (req, res) => {
 
 app.route('/create-order').post(createOrder);
 app.route('/verify-payment').post(verifyPayment);
-
+app.route('/payment').post(payment_collection) ;
 
 
 // Start the server
@@ -274,11 +275,6 @@ app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-
-
-
-
-module.exports = {app}  ; 
 
 
 
