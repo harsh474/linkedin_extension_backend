@@ -3,11 +3,7 @@ const bodyParser = require('body-parser');
 const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
 
 
-// // Replace with your Razorpay credentials
-const razorpay = new Razorpay({
-  key_id: 'rzp_live_ey3YUXl20dpPJs',
-  key_secret: 'TTUSaQriWuvvjpo7mgHNEHfK',
-});
+
 
 // Route to handle order creation
 const createOrder =  async (req, res) => {
