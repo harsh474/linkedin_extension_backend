@@ -1,7 +1,6 @@
-const mongoose = require('mongoose') ; 
-const Schema = mongoose.schema ; 
-
-let OrderSchema = new Schema({ 
+const mongoose  = require('mongoose');
+const schema = mongoose.Schema ; 
+let OrderSchema = new schema({ 
     order_id : String , 
     amount : Number ,  
     order_date : Date, 
@@ -9,7 +8,7 @@ let OrderSchema = new Schema({
     status:String,
     payment_id:String,
     owner : { 
-        type : Schema.Types.ObjectId, 
+        type :schema.Types.ObjectId,
         ref: "User"
     }
 })

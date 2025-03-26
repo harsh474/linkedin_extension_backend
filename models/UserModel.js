@@ -1,13 +1,13 @@
 const mongoose = require('mongoose') ; 
-const Schema = mongoose.schema ; 
+const schema = mongoose.Schema ; 
 
-let UserSchema = new Schema({ 
+let UserSchema = new schema({ 
     order_id : String , 
     order_amount : String ,  
     order_date : Date, 
     plan_type: String ,  
     paymentcollection: [{ 
-         type : Schema.Types.ObjectId, 
+        type : schema.Types.ObjectId, 
         ref: "Order"
     }]
 })

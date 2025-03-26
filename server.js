@@ -18,7 +18,8 @@ app.use(cors({
     optionSuccessStatus: 200
 }));
 const {createOrder,verifyPayment} = require('./Controllers/razorpayController') ;
-const {payment_collection} = require('./Controllers/payment') ;
+const {payment_collection} = require('./Controllers/payment') ; 
+const {authenticateToken,check_login} = require('./Controllers/authenticatetoken')
 const {extractJobDetails} = require( './googleapi') ; 
 const { usercollection } = require('./db');
 
@@ -30,37 +31,6 @@ app.get('/', (req, res) => {
 app.set('trust proxy', 1) // trust first proxy
 
 
-const authenticateToken = async (req, res, next) => {
-    // const authHeader = req.headers["authorization"]; // Ensure header is lowercase
-    // const token = authHeader && authHeader.split(" ")[1];  
-    let token = req.cookies.token;
-    // token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImhhcnNocmFqcHV0MTEwMUBnbWFpbC5jb20iLCJpYXQiOjE3MzczOTYzODV9.aw-4Umu9f0BOsZS__FM433AfLTQ5dM7QLEiEjh0IwZs" ;
-    console.log("token", token);
-
-    if (!token) {
-        return res.status(401).json({"You are not logged in": token});
-    }
-
-    console.log("Authentication in progress...");
-
-    jwt.verify(token, SECRET_KEY, (error, user) => {
-        if (error) {
-            console.log("JWT Error:", error);
-
-            // If the token is expired
-            if (error.name === "TokenExpiredError") {
-                return res.status(498).json("Token expired, please login again.");
-            }
-
-            return res.status(401).json("Invalid token, please login again.");
-        }
-
-        req.user = user;
-        console.log("Authenticated successfully", req.user);
-        next();
-    });
-};
-
 
 
 app.post('/chatgpt', authenticateToken, async (req, res) => {
@@ -70,121 +40,6 @@ app.post('/chatgpt', authenticateToken, async (req, res) => {
 
     return res.status(200).json(emailTemplate); 
 
-    try {
-        // Fetch user information from database
-        const applicantData = await usercollection.find({ email: req.user.email }).limit(1).toArray();
-        const currentcount = applicantData[0].currentcount;
-        const maxxcount = applicantData[0].maxxcount;
-
-        if (currentcount >= maxxcount) {
-            return res.status(501).json({ "message": "You have hit your current limit. Please Upgrade!" });
-        }
-
-        const Applicant_information = {
-            name: applicantData[0].name || 'N/A',
-            resumeLink: applicantData[0].Resume || 'N/A',
-            institution: applicantData[0].institution || 'N/A',
-            graduationYear: applicantData[0].graduationYear || 'N/A',
-            companyName: applicantData[0].companyName || 'N/A',
-            role: applicantData[0].role || 'N/A',
-            experienceDescription: applicantData[0].experienceDescription || 'N/A',
-            github: applicantData[0].GitHub || 'N/A',
-            linkedin: applicantData[0].LinkedIn || 'N/A',
-            email: applicantData[0].email || 'N/A'
-        };
-
-        try {
-            const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-                model: 'gpt-3.5-turbo',
-                messages: [
-                    {
-                        "role": "system",
-                        "content": "You are an expert recruiter assistant. Extract and structure data for job applications."
-                    },
-                    {
-                        "role": "user",
-                        "content": `Analyze the LinkedIn job post below and extract the following details as JSON:
-1. Recruiter name: "recruiter_name"
-2. Experience requirement: "experience"
-3. Email to apply: "email"
-4. Job title: "job_title"
-5. Job ID (if available): "job_id"
-6. Company name: "company"
-7. Email subject: Suggested subject for applying (e.g., "Application for Python Developer")
-
-If any information is missing in the post, use 'N/A'. Ensure the response is a clean JSON object without extra characters or formatting.`
-                    },
-                    {
-                        "role": "user",
-                        "content": userMessage // LinkedIn post content provided by the user
-                    },
-                    {
-                        "role": "user",
-                        "content": `Insert applicant details: ${JSON.stringify(Applicant_information)}. Use these details to personalize the response.`
-                    }
-                ]
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            let assistantResponse = response.data.choices[0].message.content;
-
-            // Clean the response
-            let cleanedResponse = assistantResponse.replace(/\\/g, '').replace(/\n/g, '').replace(/\\n/g, '');
-
-            // Parse the JSON response
-            let jsonResponse;
-            try {
-                jsonResponse = JSON.parse(cleanedResponse);
-            } catch (error) {
-                console.error('Error parsing JSON:', error);
-                jsonResponse = {
-                    "recruiter_name": "N/A",
-                    "experience": "N/A",
-                    "email": "N/A",
-                    "job_title": "N/A",
-                    "job_id": "N/A",
-                    "subject": "N/A",
-                    "company": "N/A"
-                };
-            }
-
-            // Prepare the email format
-            const emailTemplate = {
-                "To": jsonResponse.email !== "N/A" ? jsonResponse.email : "example@example.com",
-                "Subject": jsonResponse.subject !== "N/A" ? jsonResponse.subject : `Application for ${jsonResponse.job_title || 'a position'} at ${jsonResponse.company || 'your company'}`,
-                "Body": `Dear ${jsonResponse.recruiter_name !== "N/A" ? jsonResponse.recruiter_name : "Hiring Manager"},\n\n` +
-                    `I am writing to express my interest in the ${jsonResponse.job_title || "open position"} at ${jsonResponse.company || "your company"}. ` +
-                    `With my experience in ${Applicant_information.experienceDescription || "the relevant field"}, I believe I am a strong candidate for this role.\n\n` +
-                    `Please find my resume attached for your consideration. I look forward to discussing how my skills and experiences align with the needs of your team.\n\n` +
-                    `Thank you for your time and consideration.\n\n` +
-                    `Best regards,\n${Applicant_information.name}\n` +
-                    `Email: ${Applicant_information.email}\nGitHub: ${Applicant_information.github}\nLinkedIn: ${Applicant_information.linkedin}\nResume: ${Applicant_information.resumeLink}`
-            };
-
-            // Save email template to database
-            await emailcollection.insertOne(emailTemplate);
-
-            // Increment count
-            await usercollection.updateOne(
-                { email: req.user.email },
-                { $set: { 'currentcount': currentcount + 1 } }
-            );
-
-            res.status(200).json(emailTemplate);
-
-        } catch (error) {
-            console.error('Error processing request:', error);
-            res.status(500).json({ error: 'An error occurred while processing the request.' });
-        }
-
-    } catch (error) {
-        console.error("Error:", error);
-        res.status(500).send("Error calling ChatGPT API",error);
-    }
 });
 
 
@@ -228,13 +83,14 @@ app.post('/login', async (req, res) => {
 
         // Create a JWT token
         const token = jwt.sign({ email: user.email }, SECRET_KEY);
-        res.cookie("token", token, {
-            httpOnly: true,  // Prevents client-side access to the cookie
-            secure: true,    // Ensures the cookie is only sent over HTTPS
-            sameSite: "none",// Required for cross-origin cookies
-            domain: "linkdinextensionbackend-dzc7dterc9cggrhd.eastus-01.azurewebsites.net"
+        // res.cookie("token", token, {
+        //     httpOnly: true,  // Prevents client-side access to the cookie
+        //     secure: true,    // Ensures the cookie is only sent over HTTPS
+        //     sameSite: "none",// Required for cross-origin cookies
+        //     domain: "linkdinextensionbackend-dzc7dterc9cggrhd.eastus-01.azurewebsites.net"
 
-        });
+        // }); 
+        res.cookie("token",token) ;
         // Set the token as a cookie and send a successful response
         res.status(200).json({ message: "Successfully logged in", "token": token });
 
@@ -250,21 +106,9 @@ app.get('/logout', async (req, res) => {
 });
 
 
-app.get('/check-login', async (req, res) => {
-    const token = req.cookies.token;
-    console.log("token", token);
-    if (token) {
-        res.status(200).send({ "message": token });
-    }
-    else {
-        res.status(400).send({ "message": "Token not found" });
-    }
-})
 
 
-
-
-
+app.route('/check-login').get(authenticateToken,check_login) ;
 app.route('/create-order').post(createOrder);
 app.route('/verify-payment').post(verifyPayment);
 app.route('/payment').post(payment_collection) ;
@@ -277,197 +121,3 @@ app.listen(PORT, () => {
 
 
 
-
-// app.post('/chatgpt', authenticateToken, async (req, res) => {
-//     const userMessage = req.body.message || "";
-//     // console.log("entered in chatgpt",userMessage,);
-//     try {
-//         // Fetch user information from database
-//         const applicantData = await usercollection.find({ email: req.user.email }).limit(1).toArray(); 
-//         const currentcount = applicantData[0].currentcount ; 
-//         const maxxcount = applicantData[0].maxxcount ; 
-//         if(currentcount>=maxxcount){ 
-//             console.log("message","you have Hit current limit .Please recharge !")
-//           return  res.status(501).json({"message":"you have Hit current limit .Please recharge !"})
-//         }
-//         //  = await usercollection.findById(req.user._id).lean();
-//         console.log(applicantData[0].name);
-//         const Applicant_information = {
-//             name: applicantData[0].name || 'N/A', // replace with actual field
-//             resumeLink: applicantData[0].Resume || 'N/A', // replace with actual field
-//             institution: applicantData[0].institution || 'N/A', // replace with actual field
-//             graduationYear: applicantData[0].graduationYear || 'N/A', // replace with actual field
-//             companyName: applicantData[0].companyName || 'N/A',
-//             role: applicantData[0].role || 'N/A',
-//             experienceDescription: applicantData[0].experienceDescription || 'N/A',
-//             github:applicantData[0].GitHub||'N/A',
-//             linkedin:applicantData[0].LinkedIn||'N/A',
-//             email:applicantData[0].email||'N/A'
-//             // Add other relevant fields as needed
-//         };
-//         // let jsonResponse;
-//         // try {
-//         // const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-//         //     model: 'gpt-3.5-turbo',
-//         //     messages: [
-//         //         {
-//         //             "role": "system",
-//         //             "content": "You are an expert recruiter assistant."
-//         //         },
-//         //         {
-//         //             "role": "user",
-//         //             "content": `You are given a LinkedIn job post regarding a job opening by a recruiter. As an applicant, analyze the post and extract the following details: 
-//         //             // ... (rest of your prompt)
-//         //             `
-//         //         },
-//         //         {
-//         //             "role": "user",
-//         //             "content": userMessage
-//         //         },
-//         //         {
-//         //             "role": "user",
-//         //             "content": `REPLACE USER AND COMPANY INFORMATION FROM ${JSON.stringify(applicantData)} and company name and hr name from ${userMessage}`
-//         //         },
-//         //         {
-//         //             "role": "user",
-//         //             "content": "Please clean the response to remove any special characters, new lines, or slashes, ensuring it is a clean JSON object."
-//         //         }
-//         //     ]
-//         // }, {
-//         //     headers: {
-//         //         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-//         //         'Content-Type': 'application/json'
-//         //     }
-//         // });
-//         // console.log("response")
-//         // console.log("authentication")
-
-//         // let assistantResponse = response.data.choices[0].message.content;
-
-//         // // Clean the response further if needed
-//         // let cleanedResponse = assistantResponse.replace(/\\/g, '').replace(/\n/g, '');
-
-//         // // Parse the cleaned response as JSON
-
-//         //     jsonResponse = JSON.parse(cleanedResponse);
-//         // } catch (error) {
-//         //     console.log("chat_error",error)
-//         //     jsonResponse = {
-//         //         "recruiter_name": "N/A",
-//         //         "experience": "N/A",
-//         //         "email": "N/A",
-//         //         "subject": "N/A",
-//         //         "body": "N/A"
-//         //     };
-//         // }
-//         try {
-//             const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-//                 model: 'gpt-3.5-turbo',
-//                 messages: [
-//                     {
-//                         "role": "system",
-//                         "content": "You are an expert recruiter assistant."
-//                     },
-//                     {
-//                         "role": "user",
-//                         "content": `You are given a LinkedIn job post regarding a job opening by a recruiter. As an applicant, analyze the post and extract the following details: 
-//                             1. The recruiter's name  as "recruiter_name"
-//                             2. The required years of experience as "experience"
-//                             3. The email address to which applications should be sent stored in "email"
-//                             4. Job Title as "job_title"
-//                             5. job Id as "job_id"
-//                             6. Name of the comapny as "company"
-//                             7. write subject for the mail like 'Application for senior data engineer' as subject
-//                             Format your response as a JSON object with keys: 'recruiter_name', 'experience', 'email', 'job_title',  'job_id',subject and 'company'. 
-//                             If any information is missing, use 'N/A' as the value.`
-//                     },
-//                     {
-//                         "role": "user",
-//                         "content": userMessage.content // LinkedIn post content provided by the user 
-//                     },
-//                     {
-//                         "role": "user",
-//                         "content": JSON.stringify(Applicant_information) // Applicant info in string form
-//                     },
-//                     {
-//                         "role": "user",
-//                         "content": `REPLACE USER AND COMPANY INFORMATION from ${JSON.stringify(Applicant_information)} and extract company name and recruiter name from ${userMessage}`
-//                     },
-//                     {
-//                         "role": "user",
-//                         "content": "Please clean the response to remove any special characters, new lines, or slashes, ensuring it is a clean JSON object."
-//                     }
-//                 ]
-//             }, {
-//                 headers: {
-//                     'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-//                     'Content-Type': 'application/json'
-//                 }
-//             });
-
-//             // console.log("response", response.data);
-//             let assistantResponse = response.data.choices[0].message.content;
-
-//             // Clean the response to remove unwanted characters
-//             let cleanedResponse = assistantResponse.replace(/\\/g, '').replace(/\n/g, '').replace(/\\n/g, '');
-
-//             // Parse the cleaned response as JSON
-//             let jsonResponse;
-//             try {
-//                 jsonResponse = JSON.parse(cleanedResponse);
-//             } catch (error) {
-
-//                 console.log('Error parsing JSON:', error);
-//                 jsonResponse = {
-//                     "recruiter_name": "N/A",
-//                     "experience": "N/A",
-//                     "email": "N/A",
-//                     "body": "N/A",
-//                     "job_title": "N/A",
-//                     "job_id":"N/A",
-//                     "subject": "N/A",
-//                     "comapny":"N/A"
-//                 }; // Default in case of error
-//             }
-
-//             // Prepare the email format
-//             const emailTemplate = {
-//                 "To": jsonResponse.email !== "N/A" ? jsonResponse.email : "example@example.com", // Default email if N/A
-//                 "Subject": jsonResponse.subject !== "N/A" ? jsonResponse.subject : `Application for ${jsonResponse.job_title}'s job job id ${jsonResponse.Job_id} at ${jsonResponse.comapny}`,
-//                 "Body": `Dear ${jsonResponse.recruiter_name !== "N/A" ? jsonResponse.recruiter_name : "Hiring Manager"},\n\n` +
-//                     `I am writing to express my interest in the ${jsonResponse.job_title || "open position"} at ${jsonResponse.company || "your company"}. ` +
-//                     `With my experience in ${Applicant_information.expertise || "the relevant field"}, I believe I am a strong candidate for this role. \n\n` +
-//                     `Please find my resume attached for your consideration. I look forward to discussing how my skills and experiences align with the needs of your team. \n\n` +
-//                     `Thank you for your time and consideration.\n\n` +
-//                     `Best regards,\n${Applicant_information.name}\n` +
-//                     `Email:${Applicant_information.email}\nGitHub: ${Applicant_information.github}\nLinkedIn: ${Applicant_information.linkedin}\nResume: ${Applicant_information.resumeLink}`
-//             };
-
-//             // Insert the email template into MongoDB
-//             let result = await emailcollection.insertOne(emailTemplate);
-//             console.log(emailTemplate);  
-
-//             // incrementing count  
-//             var count  = applicantData[0].currentcount ;  
-//             result = usercollection.updateOne(
-//              {email:req.user.email},
-//              { 
-//                 $set:{'currentcount':count+1}
-//              }
-//             )
-
-
-//             // Return the email template as a JSON response
-//             res.status(200).json(emailTemplate);
-
-//         } catch (error) {
-//             console.error('Error processing request:', error);
-//             res.status(500).json({ error: 'An error occurred while processing the request.' });
-//         }
-
-//     } catch (error) {
-//         console.log("error", error)
-//         console.error("Error calling ChatGPT API:", error);
-//         res.status(500).send("Error calling ChatGPT API");
-//     }
-// });
