@@ -2,7 +2,11 @@ const Razorpay = require('razorpay');
 const bodyParser = require('body-parser');
 const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
 
-
+// // Replace with your Razorpay credentials
+const razorpay = new Razorpay({
+  key_id: process.env.key_id,
+  key_secret: process.env.key_secret,
+});
 
 
 // Route to handle order creation
