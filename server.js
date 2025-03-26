@@ -2,14 +2,10 @@ const express = require("express");
 const axios = require("axios");
 const dotenv = require("dotenv");
 const cors = require('cors');
-const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 const bcrypt = require("bcryptjs")
 const cookieParser = require('cookie-parser')
 dotenv.config();  // Load environment variables
-const Razorpay = require('razorpay');
-const path = require('path');
-const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
 const { json } = require("stream/consumers");
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -21,7 +17,7 @@ app.use(cors({
     credentials: true,            //access-control-allow-credentials:true
     optionSuccessStatus: 200
 }));
-
+const {createOrder,verifyPayment} = require('./Controllers/razorpayController') ;
 const {extractJobDetails} = require( './googleapi') ; 
 const { usercollection } = require('./db');
 
@@ -69,13 +65,9 @@ const authenticateToken = async (req, res, next) => {
 app.post('/chatgpt', authenticateToken, async (req, res) => {
   
     let userMessage = req.body.message || "";  
-        let temp  = userMessage[0].content;   
-        userMessage = String(temp)
-        // userMessage = "HI my name is HArsh Rajput";
-
     const emailTemplate = await extractJobDetails(userMessage) ;   
 
-   return res.status(200).json(emailTemplate); 
+    return res.status(200).json(emailTemplate); 
 
     try {
         // Fetch user information from database
@@ -272,71 +264,11 @@ app.get('/check-login', async (req, res) => {
 
 
 
-// Replace with your Razorpay credentials
-const razorpay = new Razorpay({
-    key_id: 'rzp_test_UckZXEaT1ygZFP',
-    key_secret: 'XG4wriFTgDEfWdjIEzpcgS1V',
-});
+app.route('/create-order').post(createOrder);
+app.route('/verify-payment').post(verifyPayment);
 
 
 
-
-
-// Route to serve the success page
-app.get('/payment-success', (req, res) => {
-    res.sendFile(path.join(__dirname, 'success.html'));
-});
-
-// Route to handle payment verification
-app.post('/verify-payment', (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
-    const secret = razorpay.key_secret;
-    const body = razorpay_order_id + '|' + razorpay_payment_id;
-
-    try {
-        const isValidSignature = validateWebhookSignature(body, razorpay_signature, secret);
-        if (isValidSignature) {
-            // Update the order with payment details
-            const orders = readData();
-            const order = orders.find(o => o.order_id === razorpay_order_id);
-            if (order) {
-                order.status = 'paid';
-                order.payment_id = razorpay_payment_id;
-                writeData(orders);
-            }
-            res.status(200).json({ status: 'ok' });
-            console.log("Payment verification successful");
-        } else {
-            res.status(400).json({ status: 'verification_failed' });
-            console.log("Payment verification failed");
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ status: 'error', message: 'Error verifying payment' });
-    }
-});
-
-app.post('/payment/checkout', async (req, res) => {
-    const { name, amount } = req.body;
-    try {
-        let order;
-        try {
-            order = await razorpay.orders.create({
-                amount: Number(amount * 100),
-                currency: "INR",
-            })
-
-        } catch (error) {
-            console.log("error while calling razorpay in backend", error);
-        }
-        console.log("created order in backend", order);
-        res.json(order);
-    } catch (error) {
-        console.log("error in backend", error);
-    }
-
-})
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
@@ -346,6 +278,7 @@ app.listen(PORT, () => {
 
 
 
+module.exports = {app}  ; 
 
 
 

@@ -188,5 +188,13 @@
     "receipt": null,
     "status": "paid",
     "payment_id": "pay_PRWgsMPwVnOiOU"
+  },
+  {
+    "order_id": "order_QB5bW0KezNc1MJ",
+    "amount": 1200,
+    "currency": "INR",
+    "receipt": "receipt#1",
+    "status": "paid",
+    "payment_id": "pay_QB5d5yK3NSJFAV"
   }
 ]
