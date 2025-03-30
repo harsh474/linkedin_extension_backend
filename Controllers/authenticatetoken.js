@@ -28,16 +28,42 @@ const authenticateToken = async (req, res, next) => {
 const check_login = async (req,res)=>{  
     console.log("email",req.user.email);
     const query = { email: req.user.email }; 
-    const options = { 
-        projection: { _id: 0, name: 1, email: 1,phone:1 },
-    } 
     let user ;
-    try {
-      user = await usercollection.findOne(query,options) ;
+    try { 
+      user = await usercollection.findOne(query) ; 
+      res.status(200).json({ "message": user});
     } catch (error) {
-        console.log("error while feteching user in checklogin api ",error);
+        console.log("error while feteching user in checklogin api ",error); 
+        res.status(500).json({"message":`Error while feteching userdetails,${error}`})
+
     }
-    res.status(200).send({ "message": user});
+} 
+const editdetails = async (req,res)=>{ 
+   const data = req.body ;  
+   
+    try {
+    let user = await usercollection.findOneAndUpdate( 
+        {"email":data.email} ,
+        { 
+            $set:{ 
+                'name'       :data.name, 
+                'phone'       :data.phone, 
+                'password'     :data.password, 
+                "resumelink"   :data.resumelink,
+                "linkdinlink": data.linkdinlink,
+                "githublink":   data.githublink,
+                'ugDetails'      :data.ugDetails, 
+                'pgDetails'       :data.pgDetails, 
+                'experiences'     :data.experiences
+            }
+        } ,
+        { upsert: true, returnDocument: "after" }) 
+        console.log("user details in editdetails backend after update",user) 
+    res.status(200).json(user)
+   } catch (error) {
+    res.status(500).json({"message":`Error while updating userdetails,${error}`})
+   }
+   
    
 }
-module.exports = {authenticateToken,check_login} ; 
+module.exports = {authenticateToken,check_login,editdetails} ; 

@@ -14,9 +14,9 @@ mongoose.connect(`${mongo_url}`)
 const db =  mongoose.connection ;
 // const emailcollection = db.collection('email');
 const usercollection = db.collection('user');
-
+const ordercollection = db.collection('orders')
 module.exports = { 
-     usercollection
+     usercollection,ordercollection
  };
  
  

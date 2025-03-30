@@ -19,7 +19,7 @@ app.use(cors({
 }));
 const {createOrder,verifyPayment} = require('./Controllers/razorpayController') ;
 const {payment_collection} = require('./Controllers/payment') ; 
-const {authenticateToken,check_login} = require('./Controllers/authenticatetoken')
+const {authenticateToken,check_login,editdetails} = require('./Controllers/authenticatetoken')
 const {extractJobDetails} = require( './googleapi') ; 
 const { usercollection } = require('./db');
 
@@ -107,7 +107,7 @@ app.get('/logout', async (req, res) => {
 
 
 
-
+app.route('/edit-details').put(editdetails);
 app.route('/check-login').get(authenticateToken,check_login) ;
 app.route('/create-order').post(createOrder);
 app.route('/verify-payment').post(verifyPayment);

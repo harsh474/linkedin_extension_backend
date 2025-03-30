@@ -11,4 +11,4 @@ let UserSchema = new schema({
         ref: "Order"
     }]
 })
-module.exports = mongoose.model("User",UserSchema) ; 
+const User = mongoose.model("User",UserSchema) ; 
