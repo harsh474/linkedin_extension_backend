@@ -24,35 +24,74 @@ const {extractJobDetails} = require( './googleapi') ;
 const { usercollection } = require('./db');
 
 let SECRET_KEY = process.env.SECRET_KEY;
-app.get('/', (req, res) => {
-    res.send("Hello World");
+app.get('/',authenticateToken,async(req, res)  => { 
+    let email = req.user.email
+     const query = { email:email  };  
+        let user ;
+        user = await usercollection.findOne(query) 
+    if(user.currentcount>=user.maxxcount){ 
+        return res.status(410).json("You pack has expired, recharge Now")
+    }
+    let userMessage = req.body.message || "";   
+    try {
+        // const emailTemplate = await extractJobDetails(userMessage) ;   
+        user = await usercollection.findOneAndUpdate(
+            {email:email},
+            { 
+                $inc: { 
+                    currentcount :1
+                }
+            } ,
+            { upsert: true, returnDocument: "after" });
+        
+        return res.status(200).json(user); 
+    } catch (error) {
+       return res.status(400).json(`error while writing  email ${error}`)
+    }
 });
 
 app.set('trust proxy', 1) // trust first proxy
 
-
-
-
-app.post('/chatgpt', authenticateToken, async (req, res) => {
-  
-    let userMessage = req.body.message || "";  
-    const emailTemplate = await extractJobDetails(userMessage) ;   
-
-    return res.status(200).json(emailTemplate); 
-
+app.post('/chatgpt', authenticateToken, async (req, res) => { 
+    let email = req.user.email
+    const query = { email:email  };  
+       let user ;
+       user = await usercollection.findOne(query) 
+   if(user.currentcount>=user.maxxcount){ 
+       return res.status(410).json("You pack has expired, recharge Now")
+   }
+   let userMessage = req.body.message || "";   
+   try {
+       const emailTemplate = await extractJobDetails(userMessage) ;   
+       user = await usercollection.findOneAndUpdate(
+           {email:email},
+           { 
+               $inc: { 
+                   currentcount :1
+               }
+           } ,
+           { upsert: true, returnDocument: "after" });
+       
+       return res.status(200).json(emailTemplate); 
+   } catch (error) {
+      return res.status(400).json(`error while writing  email ${error}`)
+   }
 });
 
-
 app.post('/signupform', async (req, res) => {
-    const data = req.body.formdata;
-    try {
-        const result = await usercollection.insertOne(data);
-        res.send("sucessfuly save user data")
+    const data = req.body.formdata; 
+    try { 
+        let maxxcount = 10, currentcount = 0; 
+        // Ensure usercollection is defined and connected
+        const user = await usercollection.insertOne({ ...data, maxxcount, currentcount });
+
+        res.status(201).json({ message: "Successfully saved user data", user });
     } catch (error) {
-        console.error("Error while saving data", error.response ? error.response.data : error.message)
-        res.status(500).json({ "error while saving data": error })
+        console.error("Error while saving data:", error.message);
+        res.status(500).json({ error: "Error while saving data", details: error.message });
     }
-})
+});
+
 
 
 app.post('/login', async (req, res) => {
@@ -88,7 +127,6 @@ app.post('/login', async (req, res) => {
         //     secure: true,    // Ensures the cookie is only sent over HTTPS
         //     sameSite: "none",// Required for cross-origin cookies
         //     domain: "linkdinextensionbackend-dzc7dterc9cggrhd.eastus-01.azurewebsites.net"
-
         // }); 
         res.cookie("token",token) ;
         // Set the token as a cookie and send a successful response
@@ -104,7 +142,6 @@ app.get('/logout', async (req, res) => {
     res.clearCookie('token');
     res.status(200).send("User logout successfully");
 });
-
 
 
 app.route('/edit-details').put(editdetails);

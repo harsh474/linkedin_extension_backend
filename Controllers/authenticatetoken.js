@@ -26,7 +26,6 @@ const authenticateToken = async (req, res, next) => {
 };
  
 const check_login = async (req,res)=>{  
-    console.log("email",req.user.email);
     const query = { email: req.user.email }; 
     let user ;
     try { 
