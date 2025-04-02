@@ -99,7 +99,6 @@ app.post('/login', async (req, res) => {
 
         const { email, pass } = req.body;
         if (req.cookies.token) {
-
             return res.status(200).json({ "message": "User is already login" });
         }
         // Find the user by email
@@ -109,7 +108,7 @@ app.post('/login', async (req, res) => {
             return res.status(404).json({ error: "You are not registered, kindly register." });
         }
         if (user.password !== pass) {
-            return res.status(401).json({ error: "Password is not correct" });
+            return res.status(401).json({error: "Password is not correct" });
         }
         // Compare the hashed password with the password from the request
 
@@ -132,14 +131,19 @@ app.post('/login', async (req, res) => {
         // Set the token as a cookie and send a successful response
         res.status(200).json({ message: "Successfully logged in", "token": token });
 
-    } catch (error) {
+    } catch (error) { 
         console.error(error);
         res.status(500).json({ error: "Internal server error" });
     }
 });
 
 app.get('/logout', async (req, res) => {
-    res.clearCookie('token');
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        domain: "linkdinextensionbackend-dzc7dterc9cggrhd.eastus-01.azurewebsites.net",
+    });
     res.status(200).send("User logout successfully");
 });
 
