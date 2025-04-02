@@ -124,8 +124,9 @@ app.post('/login', async (req, res) => {
         res.cookie("token", token, {
             httpOnly: true,  // Prevents client-side access to the cookie
             secure: true,    // Ensures the cookie is only sent over HTTPS
-            sameSite: "none",// Required for cross-origin cookies
-            domain: "linkdinextensionbackend-dzc7dterc9cggrhd.eastus-01.azurewebsites.net"
+            sameSite: "none",// Required for cross-origin cookies 
+            domain: ".jobmailer.in", // Allows cookies for jobmailer.in and subdomains
+
         }); 
         // res.cookie("token",token) ;
         // Set the token as a cookie and send a successful response
@@ -142,7 +143,7 @@ app.get('/logout', async (req, res) => {
         httpOnly: true,
         secure: true,
         sameSite: "none",
-        domain: "linkdinextensionbackend-dzc7dterc9cggrhd.eastus-01.azurewebsites.net",
+        domain: ".jobmailer.in", // Allows cookies for jobmailer.in and subdomains
     });
     res.status(200).send("User logout successfully");
 })
