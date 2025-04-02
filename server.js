@@ -249,7 +249,12 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/logout', async (req, res) => {
-    res.clearCookie('token');
+    res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    domain: "linkdinextensionbackend-dzc7dterc9cggrhd.eastus-01.azurewebsites.net",
+});
     res.status(200).send("User logout successfully");
 });
 
