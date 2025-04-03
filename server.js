@@ -133,8 +133,10 @@ app.post('/login', async (req, res) => {
         //     return res.status(403).json({ error: "Invalid credentials" });
         //   }
 
-        // Create a JWT token
-        const token = jwt.sign({ email: user.email }, SECRET_KEY);
+        // Create a JWT token 
+
+        const token = jwt.sign({ email: user.email }, SECRET_KEY); 
+        console.log(getCookieConfig());
         res.cookie("token", token,getCookieConfig()); 
 
         // Set the token as a cookie and send a successful response
