@@ -23,7 +23,21 @@ const {authenticateToken,check_login,editdetails} = require('./Controllers/authe
 const {extractJobDetails} = require( './googleapi') ; 
 const { usercollection } = require('./db');
 
-let SECRET_KEY = process.env.SECRET_KEY;
+let SECRET_KEY = process.env.SECRET_KEY; 
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const FRONTEND_URL = 'https://www.jobmailer.in';
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+const getCookieConfig = () => {
+  return {
+    httpOnly: true,
+    secure: NODE_ENV === 'production', // Only send over HTTPS in production
+    sameSite: 'none', // Required for cross-domain cookies
+    maxAge: COOKIE_MAX_AGE,
+    domain: NODE_ENV === 'production' ? '.jobmailer.in' : 'localhost', // Use root domain in production
+    path: '/'
+  };
+};
+
 app.get('/',authenticateToken,async(req, res)  => { 
     let email = req.user.email
      const query = { email:email  };  
@@ -121,13 +135,7 @@ app.post('/login', async (req, res) => {
 
         // Create a JWT token
         const token = jwt.sign({ email: user.email }, SECRET_KEY);
-        res.cookie("token", token, {
-            httpOnly: true,  // Prevents client-side access to the cookie
-            secure: true,    // Ensures the cookie is only sent over HTTPS
-            sameSite: "none",// Required for cross-origin cookies 
-            domain: ".jobmailer.in", // Allows cookies for jobmailer.in and subdomains
-
-        }); 
+        res.cookie("token", token,getCookieConfig); 
         // res.cookie("token",token) ;
         // Set the token as a cookie and send a successful response
         res.status(200).json({ message: "Successfully logged in", "token": token });
@@ -139,12 +147,16 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/logout', async (req, res) => {
-    res.clearCookie("token", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        domain: ".jobmailer.in", // Allows cookies for jobmailer.in and subdomains
+    // res.clearCookie("token", {
+    //     httpOnly: true,
+    //     secure: true,
+    //     sameSite: "none",
+    // }); 
+    res.clearCookie('token', {
+      ...getCookieConfig(),
+      maxAge: 0 // Immediate expiry
     });
+    
     res.status(200).send("User logout successfully");
 })
 
