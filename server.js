@@ -137,7 +137,12 @@ app.post('/login', async (req, res) => {
 
         const token = jwt.sign({ email: user.email }, SECRET_KEY); 
         console.log(getCookieConfig());
-        res.cookie("token", token,getCookieConfig()); 
+        res.cookie("token", token,{
+            httpOnly: true,
+            sameSite: 'none', // Required for cross-domain cookies
+            maxAge: COOKIE_MAX_AGE,
+            path: '/'
+          }); 
 
         // Set the token as a cookie and send a successful response
         res.status(200).json({ message: "Successfully logged in", "token": token });
