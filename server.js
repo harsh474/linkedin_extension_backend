@@ -33,7 +33,7 @@ const getCookieConfig = () => {
     secure: NODE_ENV === 'production', // Only send over HTTPS in production
     sameSite: 'none', // Required for cross-domain cookies
     maxAge: COOKIE_MAX_AGE,
-    domain: NODE_ENV === 'production' ? '.jobmailer.in' : 'localhost', // Use root domain in production
+    // domain: NODE_ENV === 'production' ? '.jobmailer.in' : 'localhost', // Use root domain in production
     path: '/'
   };
 };
@@ -136,13 +136,9 @@ app.post('/login', async (req, res) => {
         // Create a JWT token 
 
         const token = jwt.sign({ email: user.email }, SECRET_KEY); 
-        console.log(getCookieConfig());
-        res.cookie("token", token,{
-            httpOnly: true,
-            sameSite: 'none', // Required for cross-domain cookies
-            maxAge: COOKIE_MAX_AGE,
-            path: '/'
-          }); 
+        console.log(getCookieConfig()); 
+        const options = getCookieConfig();
+        res.cookie("token", token,getCookieConfig); 
 
         // Set the token as a cookie and send a successful response
         res.status(200).json({ message: "Successfully logged in", "token": token });
