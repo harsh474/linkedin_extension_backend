@@ -42,7 +42,7 @@ write to email to apply this position
 
 let result, applicantdata, extracted_text, jobDetails, Applicant_information, currentcount, maxxcount, emailResult, emailText,emailTemplate;
 
-const extractJobDetails = async (content) => {
+const extractJobDetails = async (content,user) => {
     try {
         result = await model.generateContent({
             contents: [
@@ -68,8 +68,8 @@ const extractJobDetails = async (content) => {
         });
  
         try { 
-            let email = req.user.email ;
-            applicantdata = await usercollection.findOne({ email:email });
+           
+            applicantdata = user;
         } catch (error) {
             console.log(error);
         }

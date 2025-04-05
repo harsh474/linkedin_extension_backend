@@ -70,13 +70,14 @@ app.post('/chatgpt', authenticateToken, async (req, res) => {
     let email = req.user.email
     const query = { email:email  };  
        let user ;
-       user = await usercollection.findOne(query) 
+       user = await usercollection.findOne(query)  
+       console.log("user",user);
    if(user.currentcount>=user.maxxcount){ 
        return res.status(410).json("You pack has expired, recharge Now")
    }
    let userMessage = req.body.message || "";   
    try {
-       const emailTemplate = await extractJobDetails(userMessage) ;   
+       const emailTemplate = await extractJobDetails(userMessage,user) ;   
        user = await usercollection.findOneAndUpdate(
            {email:email},
            { 
