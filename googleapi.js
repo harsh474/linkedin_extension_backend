@@ -66,9 +66,10 @@ const extractJobDetails = async (content) => {
                 }
             ]
         });
-
-        try {
-            applicantdata = await usercollection.findOne({ email: "harshrajput1101@gmail.com" });
+ 
+        try { 
+            let email = req.user.email ;
+            applicantdata = await usercollection.findOne({ email:email });
         } catch (error) {
             console.log(error);
         }
