@@ -165,3 +165,4 @@ const extractJobDetails = async (content,user) => {
 };
 
 module.exports = { extractJobDetails} ;
+

@@ -22,7 +22,7 @@ const {payment_collection} = require('./Controllers/payment') ;
 const {authenticateToken,check_login,editdetails} = require('./Controllers/authenticatetoken')
 const {extractJobDetails} = require( './googleapi') ; 
 const { usercollection } = require('./db');
-
+const {generateApplicationEmail} = require('./prompt')
 let SECRET_KEY = process.env.SECRET_KEY; 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const FRONTEND_URL = 'https://www.jobmailer.in';
@@ -142,7 +142,7 @@ app.post('/login', async (req, res) => {
         res.cookie("token", token,options); 
 
         // Set the token as a cookie and send a successful response
-        res.status(200).json({ message: "Successfully logged in", "token": token });
+        res.status(200).json({ message: user });
 
     } catch (error) { 
         console.error(error);
@@ -170,7 +170,24 @@ app.route('/check-login').get(authenticateToken,check_login) ;
 app.route('/create-order').post(createOrder);
 app.route('/verify-payment').post(verifyPayment);
 app.route('/payment').post(payment_collection) ;
-
+// --- Express Route for Email Generation ---
+app.post('/generate-email',authenticateToken, async (req, res) => {
+  
+    let jobDescription = req.body.jobDescription || ""; 
+    let email = req.user.email ;
+    const query = { email:email  };  
+    let  applicantData = await usercollection.findOne(query) ; 
+    if (!jobDescription || !applicantData) {
+        return res.status(400).json({ error: 'Both jobDescription and applicantData are required in the request body.' });
+    }
+    try { 
+          const generatedEmail = await generateApplicationEmail(jobDescription, applicantData);
+          res.status(200).json(generatedEmail);
+    } catch (error) {
+        console.error('Error generating email:', error);
+        res.status(500).json({ error: 'Failed to generate email.', details: error.message });
+    }
+});
 
 // Start the server
 app.listen(PORT, () => {
