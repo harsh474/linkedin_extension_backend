@@ -77,7 +77,7 @@ app.post('/chatgpt', authenticateToken, async (req, res) => {
    }
    let userMessage = req.body.message || "";   
    try {
-       const emailTemplate = await extractJobDetails(userMessage,user) ;   
+       const emailTemplate = await generateApplicationEmail(userMessage,user) ;   
        user = await usercollection.findOneAndUpdate(
            {email:email},
            { 
@@ -173,10 +173,12 @@ app.route('/payment').post(payment_collection) ;
 // --- Express Route for Email Generation ---
 app.post('/generate-email',authenticateToken, async (req, res) => {
   
-    let jobDescription = req.body.jobDescription || ""; 
+    let jobDescription = req.body.message || "";  
+    
     let email = req.user.email ;
     const query = { email:email  };  
-    let  applicantData = await usercollection.findOne(query) ; 
+    let  applicantData = await usercollection.findOne(query) ;  
+    console.log()
     if (!jobDescription || !applicantData) {
         return res.status(400).json({ error: 'Both jobDescription and applicantData are required in the request body.' });
     }

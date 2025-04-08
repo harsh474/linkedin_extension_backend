@@ -50,14 +50,13 @@ Identify and return the following in a JSON object:
 * "willingToRelocate": (Infer willingness to relocate to "${jobInfo.jobLocation}" based on the job description's implied need and the applicant's potential interest in the role. Default to "Yes" if the job is in a specific location and the applicant's current location is different. If the job doesn't specify a strong location preference or the applicant's location matches, default to "Considering". If explicitly stated in applicantData, use that. If completely unknown, use "Potentially").
 * "noticePeriod": (Infer notice period based on their current employment status. If 'currently_working' is true and 'to' date is empty, assume they might have a standard notice period. If 'currently_working' is false or a 'to' date is in the past, assume "Immediate" or "Negotiable". Be conservative if unsure and return "Potentially").`;
 
-const promptStep3 = (jobInfo) => `Based on the following job information, specifically the "subjectLineFormat", what should be the subject line of the application email?
+const promptStep3 = (jobDescription,jobInfo) => `Based on the following job Describtion ,applicant want to apply to  job in the jobdescribtion ,so write subject of email like Apllication for Software developer-Job  id(if avialable) ,applicant will send  as job application?
 
-Job Information:
+Job description:
 \`\`\`json
-${JSON.stringify(jobInfo)}
+${JSON.stringify(jobDescription)}
 \`\`\`
-
-The applicant is applying for the "${jobInfo.jobTitle}" position. Return only the subject line string.`;
+`;
 
 const promptStep4 = (jobInfo, applicantInfo) => `Write a professional and concise opening sentence for a job application email. The applicant's name is "${applicantInfo.name}" and they are applying for the position of "${jobInfo.jobTitle}" at "${jobInfo.companyName}" in "${jobInfo.location}". Address the email to the recruiter mentioned in the job posting ("${jobInfo.applicationEmail.split('@')[0].split('.').join(' ').split(' ')[0].charAt(0).toUpperCase() + jobInfo.applicationEmail.split('@')[0].split('.').join(' ').split(' ').slice(1).join(' ')}" - try to extract the first name).`;
 
@@ -87,6 +86,31 @@ ${currentEmailBody}
 
 Focus on aspects like formality, enthusiasm, emphasis on innovation (for startups), stability (for MNCs), or client focus (for service-based companies). Return only the suggested revisions or "No revisions needed."`;
 
+const promptStep11 = (jobDescription, applicantData) => ` Analyze jobDescription this job Description ${jobDescription} is about job posted by hr/employee/founder of that company and asking asking applicant to apply on the given email given in the Job Description 
+jobDescription:
+\`\`\`
+${ jobDescription }
+\`\`\` 
+In the applicantData all the user information is there like name,email,phone,eductions ,experiences 
+applicantData:
+\`\`\`
+${ applicantData }
+\`\`\`
+"\nNote: Do not include the subject line in the body of the email.";
+Note : 1. Subject of mail is not require 
+       2. Only require  response of mail body 
+       2.Use points or bullets in experience
+       3.Do't include thing, if not have any information about it 
+       4.IF consist of multiple jobs requirement then rollout others jobs, which  do't match with experience  ${applicantData.experiences} and skills of  ${applicantData.skills} 
+Prepare email body heighligthing about applicant ${applicantData} eductions, skills, experience of applicant (all thes infomration is in applicantData ) ,  
+Prepare different section for each and heighlight how applicantis suitable for this job role 
+also include personal information of applicant in the last of emailbody. 
+     5. Return response as json body 
+     6.Response include email of recuiter to which we have to send mail or apply, field_name of json is  "To" and
+     7.Response include subject of email which we created acoording to match job  , field name of json "subject" and
+     8.Response include subject of body of mail ,  , field name of json "body"
+"`;
+
 
 
 
@@ -99,4 +123,5 @@ module.exports = {
      promptStep6,
      promptStep7,
      promptStep10,
+     promptStep11,
  };
