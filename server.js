@@ -71,7 +71,7 @@ app.post('/chatgpt', authenticateToken, async (req, res) => {
     const query = { email:email  };  
        let user ;
        user = await usercollection.findOne(query)  
-       console.log("user",user);
+      
    if(user.currentcount>=user.maxxcount){ 
        return res.status(410).json("You pack has expired, recharge Now")
    }
@@ -86,6 +86,7 @@ app.post('/chatgpt', authenticateToken, async (req, res) => {
                }
            } ,
            { upsert: true, returnDocument: "after" });
+       // just for testing 
        
        return res.status(200).json(emailTemplate); 
    } catch (error) {

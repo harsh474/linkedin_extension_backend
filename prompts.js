@@ -86,7 +86,7 @@ ${currentEmailBody}
 
 Focus on aspects like formality, enthusiasm, emphasis on innovation (for startups), stability (for MNCs), or client focus (for service-based companies). Return only the suggested revisions or "No revisions needed."`;
 
-const promptStep11 = (jobDescription, applicantData) => ` Analyze jobDescription this job Description ${jobDescription} is about job posted by hr/employee/founder of that company and asking asking applicant to apply on the given email given in the Job Description 
+const promptStep11 = (jobDescription, applicantData) => ` Analyze jobDescription this job Description ${jobDescription} is about job posted by hr/employee/founder of that company and asking asking applicant to apply on the given email given in the Job Description, in the email it's must to include to company for which we are applying and name of recruiter which is given in ${jobDescription}
 jobDescription:
 \`\`\`
 ${ jobDescription }
@@ -102,13 +102,18 @@ Note : 1. Subject of mail is not require
        2.Use points or bullets in experience
        3.Do't include thing, if not have any information about it 
        4.IF consist of multiple jobs requirement then rollout others jobs, which  do't match with experience  ${applicantData.experiences} and skills of  ${applicantData.skills} 
-Prepare email body heighligthing about applicant ${applicantData} eductions, skills, experience of applicant (all thes infomration is in applicantData ) ,  
+Prepare email body heighligthing about applicant ${applicantData} eductions, skills, experience and resumelink ${applicantData.resumelink} of applicant (all thes infomration is in applicantData ) ,  
 Prepare different section for each and heighlight how applicantis suitable for this job role 
 also include personal information of applicant in the last of emailbody. 
      5. Return response as json body 
      6.Response include email of recuiter to which we have to send mail or apply, field_name of json is  "To" and
      7.Response include subject of email which we created acoording to match job  , field name of json "subject" and
-     8.Response include subject of body of mail ,  , field name of json "body"
+     8.Response include subject of body of mail ,  , field name of json "body" 
+     9.Do't add where jobDescription is advertised 
+     10.Do't add explicitly Personal detail section, after thanks  add all applicant personal information like name,email,Phone,Github,Linkdin,ResumeLink link is ${applicantData.resumelink}. If any field is not present in this do't add in final result
+     11.Also make bold very very important term , make company name bold also provide space btw experiences 
+     12. Use proper spacing and formatting 
+     13.
 "`;
 
 
