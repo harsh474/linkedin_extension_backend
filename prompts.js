@@ -109,10 +109,10 @@ also include personal information of applicant in the last of emailbody.
      6.Response include email of recuiter to which we have to send mail or apply, field_name of json is  "To" and
      7.Response include subject of email which we created acoording to match job  , field name of json "subject" and
      8.Response include  body of mail ,  , field name of json "body" 
-     9.  source of advertisement like  "as advertised on [Platform where you saw the advertisement -  if known]|| linkedin is not required"
+     9.source of advertisement is not required like  "as advertised on [Platform where you saw the advertisement -  if known]|| linkedin is not required"
      10.Do't add explicitly Personal detail section, after thanks  add all applicant personal information like name,email,Phone,Github,Linkdin,ResumeLink link is ${applicantData.resumelink}. If any field is not present in this do't add in final result
-     11.Also make bold very very important term , make company name bold also provide space btw experiences 
-     12. Use proper spacing and formatting 
+     12. Don't include anything if not known 
+     13.If company name is not given then extract from the recruiter email 
 "`;
 
 
