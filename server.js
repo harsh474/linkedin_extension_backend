@@ -174,7 +174,7 @@ app.route('/payment').post(payment_collection) ;
 // --- Express Route for Email Generation ---
 app.post('/generate-email',authenticateToken, async (req, res) => {
   
-    let jobDescription = req.body.message || "";  
+    let jobDescription = req.body.jobDescription || "";  
     
     let email = req.user.email ;
     const query = { email:email  };  
