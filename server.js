@@ -19,7 +19,7 @@ app.use(cors({
 }));
 const { createOrder, verifyPayment } = require('./Controllers/razorpayController');
 const { payment_collection } = require('./Controllers/payment');
-const { authenticateToken, check_login, editdetails } = require('./Controllers/authenticatetoken')
+const { authenticateToken, check_login, editdetails,checkindexing } = require('./Controllers/authenticatetoken')
 const { extractJobDetails } = require('./googleapi');
 const { usercollection, redis_client } = require('./db');
 const { generateApplicationEmail } = require('./prompt')
@@ -68,7 +68,7 @@ app.get('/', authenticateToken, async (req, res) => {
 app.set('trust proxy', 1) // trust first proxy
 
 app.post('/chatgpt', authenticateToken, async (req, res) => {
-    let email = req.user.email
+    let email = req.user.email ;
     const query = { email: email };
     let cached = await redis_client.get(email)
     let user = cached?JSON.parse(cached): await usercollection.findOne(query) ;  
@@ -100,7 +100,7 @@ app.post('/signupform', async (req, res) => {
         let maxxcount = 10, currentcount = 0;
         // Ensure usercollection is defined and connected
         const user = await usercollection.insertOne({ ...data, maxxcount, currentcount });
-        user&& await redis_client.set(email,JSON.stringify(user),{ EX: 3600 }) // this operation called short-circuiting trick
+        user&& await redis_client.set(data.email,JSON.stringify(user),{ EX: 3600 }) // this operation called short-circuiting trick
         res.status(201).json({ message: "Successfully saved user data", user });
     } catch (error) {
         console.error("Error while saving data:", error.message);
@@ -119,7 +119,7 @@ app.post('/login', async (req, res) => {
         }
         // Find the user by email
         let cached  = await redis_client.get(email) ; 
-        
+        console.log("cached in login",cached);
         let user = cached ? JSON.parse(cached): await usercollection.findOne({ email: email });
  
         if (!user) {
@@ -153,17 +153,14 @@ app.post('/login', async (req, res) => {
     }
 });
 
-app.get('/logout', async (req, res) => {
-    // res.clearCookie("token", {
-    //     httpOnly: true,
-    //     secure: true,
-    //     sameSite: "none",
-    // }); 
+app.get('/logout',authenticateToken, async (req, res) => { 
+
+    let email = req.user.email ;
     res.clearCookie('token', {
         ...getCookieConfig(),
         maxAge: 0 // Immediate expiry
     });
-
+    await redis_client.delete(email)
     res.status(200).send("User logout successfully");
 })
 
@@ -178,7 +175,7 @@ app.post('/generate-email', authenticateToken, async (req, res) => {
 
     let jobDescription = req.body.jobDescription || "";
 
-    let email = req.user.email;
+    let email = req.user.email ;
     const query = { email: email }; 
     let cached = redis_client(email) ; 
 
@@ -196,6 +193,7 @@ app.post('/generate-email', authenticateToken, async (req, res) => {
     }
 });
 
+app.get('/check-indexing',authenticateToken,checkindexing)
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

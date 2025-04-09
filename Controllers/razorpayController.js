@@ -82,7 +82,7 @@ const verifyPayment = async (req, res) => {
             $inc: { maxxcount: increment }
           },
           { upsert: true, returnDocument: "after" });
-        await redis_client.set(email,JSON.stringify(updatedcount));
+        await redis_client.set(email_id,JSON.stringify(updatedcount),{ EX: 3600 });
       } catch (error) {
         console.erro("Error while saving created  order", error); 
         return res.status(400).json("Error while creating and updating count and order in  varifyment")

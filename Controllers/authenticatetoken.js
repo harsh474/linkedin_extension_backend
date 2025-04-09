@@ -25,12 +25,14 @@ const authenticateToken = async (req, res, next) => {
     });
 };
  
-const check_login = async (req,res)=>{  
+const check_login = async (req,res)=>{   
+    let user_email = req.user.email ;
     const query = { email: req.user.email }; 
     let user ;
     try {  
-      let cached = await redis_client.get(email) ; 
-      user = cached? JSON.parse(cached) :await usercollection.findOne(query) ; 
+      let cached = await redis_client.get(user_email) ; 
+      user = cached? JSON.parse(cached) :await usercollection.findOne(query) ;  
+      redis_client.set(user_email,JSON.stringify(user));
       res.status(200).json({ "message": user});
     } catch (error) {
         console.log("error while feteching user in checklogin api ",error); 
@@ -39,7 +41,7 @@ const check_login = async (req,res)=>{
 } 
 const editdetails = async (req,res)=>{ 
    const data = req.body ;  
-   
+   let email = data.email ;
     try { 
     let user = await usercollection.findOneAndUpdate( 
         {"email":data.email} ,
@@ -57,7 +59,7 @@ const editdetails = async (req,res)=>{
             }
         } ,
         { upsert: true, returnDocument: "after" })  
-         await redis_client.set(email,JSON.stringify(user))
+         await redis_client.set(email,JSON.stringify(user),{ EX: 3600 })
         console.log("user details in editdetails backend after update",user) 
     res.status(200).json(user)
    } catch (error) {
@@ -66,4 +68,14 @@ const editdetails = async (req,res)=>{
    
    
 }
-module.exports = {authenticateToken,check_login,editdetails} ; 
+const checkindexing = async (req, res) => {
+    try {
+        const indexes = await usercollection.getIndexes();
+        res.status(200).json(indexes);
+    } catch (error) {
+        console.error("Error fetching indexes:", error);
+        res.status(500).json({ error: "Failed to fetch indexes" });
+    }
+};
+
+module.exports = {authenticateToken,check_login,editdetails,checkindexing} ; 
