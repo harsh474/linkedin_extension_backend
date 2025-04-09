@@ -1,7 +1,7 @@
 const Razorpay = require('razorpay');
 const bodyParser = require('body-parser');
 const { validateWebhookSignature } = require('razorpay/dist/utils/razorpay-utils');
-const { usercollection, ordercollection } = require('../db');
+const { usercollection, ordercollection, redis_client } = require('../db');
 require('dotenv').config(); // Load environment variables
 // // Replace with your Razorpay credentials 
 // Ensure environment variables are correctly loaded
@@ -45,8 +45,7 @@ const createOrder = async (req, res) => {
     } catch (error) {
      
     }
-    const payment_order = await ordercollection.insertOne({ ...order, user_id: user_id });
-  
+    await ordercollection.insertOne({ ...order, user_id: user_id });
     // Read current orders, add new order, and write back to the file
     res.status(200).json(order); // Send order details to frontend, including order ID 
   } catch (error) {
@@ -83,7 +82,7 @@ const verifyPayment = async (req, res) => {
             $inc: { maxxcount: increment }
           },
           { upsert: true, returnDocument: "after" });
-        
+        await redis_client.set(email,JSON.stringify(updatedcount));
       } catch (error) {
         console.erro("Error while saving created  order", error); 
         return res.status(400).json("Error while creating and updating count and order in  varifyment")

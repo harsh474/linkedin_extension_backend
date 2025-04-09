@@ -5,7 +5,6 @@ dotenv.config();
 const YOUR_API_KEY = process.env.GEMNI_API_KEY;
 const genAI = new GoogleGenerativeAI(YOUR_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-const { usercollection } = require('./db');
 
 const content = `
 Ritika KherataRitika Kherata
@@ -41,7 +40,8 @@ write to email to apply this position
 ` ;
 
 let result, applicantdata, extracted_text, jobDetails, Applicant_information, currentcount, maxxcount, emailResult, emailText,emailTemplate;
-const extractJobDetails = async (content) => {
+
+const extractJobDetails = async (content,user) => {
     try {
         result = await model.generateContent({
             contents: [
@@ -65,14 +65,10 @@ const extractJobDetails = async (content) => {
                 }
             ]
         });
-
+ 
         try { 
-            let email = req.user.email ; 
-            if(!email){  
-                console.log("email not found")
-                return res.status(500).json("email not found");
-            }
-            applicantdata = await usercollection.findOne({ email: email});
+           
+            applicantdata = user;
         } catch (error) {
             console.log(error);
         }
@@ -168,3 +164,4 @@ const extractJobDetails = async (content) => {
 };
 
 module.exports = { extractJobDetails} ;
+

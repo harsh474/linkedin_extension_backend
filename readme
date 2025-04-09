@@ -1,0 +1,9 @@
+user = await usercollection.findOneAndUpdate(
+            {email:email},
+            { 
+                $inc: { 
+                    currentcount :1
+                }
+            } ,
+            { upsert: true, returnDocument: "after" });
+        
