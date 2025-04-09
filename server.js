@@ -22,7 +22,7 @@ const {payment_collection} = require('./Controllers/payment') ;
 const {authenticateToken,check_login,editdetails} = require('./Controllers/authenticatetoken')
 const {extractJobDetails} = require( './googleapi') ; 
 const { usercollection } = require('./db');
-
+const {generateApplicationEmail} = require('./prompt')
 let SECRET_KEY = process.env.SECRET_KEY; 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const FRONTEND_URL = 'https://www.jobmailer.in';
@@ -70,13 +70,14 @@ app.post('/chatgpt', authenticateToken, async (req, res) => {
     let email = req.user.email
     const query = { email:email  };  
        let user ;
-       user = await usercollection.findOne(query) 
+       user = await usercollection.findOne(query)  
+      
    if(user.currentcount>=user.maxxcount){ 
        return res.status(410).json("You pack has expired, recharge Now")
    }
    let userMessage = req.body.message || "";   
    try {
-       const emailTemplate = await extractJobDetails(userMessage) ;   
+       const emailTemplate = await generateApplicationEmail(userMessage,user) ;   
        user = await usercollection.findOneAndUpdate(
            {email:email},
            { 
@@ -85,6 +86,7 @@ app.post('/chatgpt', authenticateToken, async (req, res) => {
                }
            } ,
            { upsert: true, returnDocument: "after" });
+       // just for testing 
        
        return res.status(200).json(emailTemplate); 
    } catch (error) {
@@ -141,7 +143,7 @@ app.post('/login', async (req, res) => {
         res.cookie("token", token,options); 
 
         // Set the token as a cookie and send a successful response
-        res.status(200).json({ message: "Successfully logged in", "token": token });
+        res.status(200).json({ message: user });
 
     } catch (error) { 
         console.error(error);
@@ -169,7 +171,26 @@ app.route('/check-login').get(authenticateToken,check_login) ;
 app.route('/create-order').post(createOrder);
 app.route('/verify-payment').post(verifyPayment);
 app.route('/payment').post(payment_collection) ;
-
+// --- Express Route for Email Generation ---
+app.post('/generate-email',authenticateToken, async (req, res) => {
+  
+    let jobDescription = req.body.jobDescription || "";  
+    
+    let email = req.user.email ;
+    const query = { email:email  };  
+    let  applicantData = await usercollection.findOne(query) ;  
+    console.log()
+    if (!jobDescription || !applicantData) {
+        return res.status(400).json({ error: 'Both jobDescription and applicantData are required in the request body.' });
+    }
+    try { 
+          const generatedEmail = await generateApplicationEmail(jobDescription, applicantData);
+          res.status(200).json(generatedEmail);
+    } catch (error) {
+        console.error('Error generating email:', error);
+        res.status(500).json({ error: 'Failed to generate email.', details: error.message });
+    }
+});
 
 // Start the server
 app.listen(PORT, () => {
