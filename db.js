@@ -6,6 +6,8 @@ const mongoose = require('mongoose')
 let mongo_url = "mongodb://localhost:27017/email";
 mongo_url = process.env.Mongo_url
 
+const redis = require('redis');
+const redis_client = redis.createClient();
 
 // mongoose.connect('mongodb://localhost:27017/email')
 mongoose.connect(`${mongo_url}`)
@@ -16,7 +18,7 @@ const db =  mongoose.connection ;
 const usercollection = db.collection('user');
 const ordercollection = db.collection('orders')
 module.exports = { 
-     usercollection,ordercollection
+     usercollection,ordercollection,redis_client
  };
  
  
