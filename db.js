@@ -8,14 +8,18 @@ const PASSWORD   = process.env.PASSWORD
 const REDIS_PORT = process.env.REDIS_PORT
 
 const redis = require('redis');
+
+// Create Redis client with SSL and access key
 const redis_client = redis.createClient({
-  host: HOST_NAME,
-  port: REDIS_PORT,
-  password: PASSWORD,
-  tls: {} // Ensures SSL is used
+  socket: {
+    host: HOST_NAME,
+    port: REDIS_PORT,
+    tls: true  // enables SSL (required for Azure)
+  },
+  password: PASSWORD  // access key from Azure
 }); 
+
 const mongoose = require('mongoose');
-const { hostname } = require("os");
 let mongo_url = "mongodb://localhost:27017/email";
 mongo_url = process.env.Mongo_url
 

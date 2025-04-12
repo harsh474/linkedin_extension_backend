@@ -21,8 +21,8 @@ const { createOrder, verifyPayment } = require('./Controllers/razorpayController
 const { payment_collection } = require('./Controllers/payment');
 const { authenticateToken, check_login, editdetails,checkindexing } = require('./Controllers/authenticatetoken')
 const { extractJobDetails } = require('./googleapi');
-const { usercollection, redis_client } = require('./db');
-const { generateApplicationEmail } = require('./prompt')
+const { usercollection, redis_client } = require('./db'); 
+const {generateEmail,generateEmail2}  = require('./Controllers/AI/generate_email')
 let SECRET_KEY = process.env.SECRET_KEY;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const FRONTEND_URL = 'https://www.jobmailer.in';
@@ -171,28 +171,7 @@ app.route('/create-order').post(createOrder);
 app.route('/verify-payment').post(verifyPayment);
 app.route('/payment').post(payment_collection);
 // --- Express Route for Email Generation ---
-app.post('/generate-email', authenticateToken, async (req, res) => {
-
-    let jobDescription = req.body.jobDescription || "";
-
-    let email = req.user.email ;
-    const query = { email: email }; 
-    let cached = redis_client(email) ; 
-
-    let applicantData = cached?JSON.parse(cached):await usercollection.findOne(query);
-    console.log()
-    if (!jobDescription || !applicantData) {
-        return res.status(400).json({ error: 'Both jobDescription and applicantData are required in the request body.' });
-    }
-    try {
-        const generatedEmail = await generateApplicationEmail(jobDescription, applicantData);
-        res.status(200).json(generatedEmail);
-    } catch (error) {
-        console.error('Error generating email:', error);
-        res.status(500).json({ error: 'Failed to generate email.', details: error.message });
-    }
-});
-
+app.post('/generate-email', authenticateToken, generateEmail2);
 app.get('/check-indexing',authenticateToken,checkindexing)
 // Start the server
 app.listen(PORT, () => {
