@@ -2,7 +2,7 @@
 const { generateApplicationEmail,generateApplicationEmail2 } = require('./prompt');
 const { usercollection, redis_client } = require('../../db'); 
 
-const generateEmail = async ()=>{ 
+const generateEmail = async (req,res)=>{ 
      let email = req.user.email ;
      const query = { email: email };
      let cached = await redis_client.get(email)
