@@ -94,7 +94,7 @@ app.post('/login', async (req, res) => {
         }
         // Find the user by email
         let cached  = await redis_client.get(email) ; 
-        console.log("cached in login",cached);
+       
         let user = cached ? JSON.parse(cached): await usercollection.findOne({ email: email });
  
         if (!user) {
