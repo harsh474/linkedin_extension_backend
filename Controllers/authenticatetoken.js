@@ -41,7 +41,10 @@ const check_login = async (req,res)=>{
 } 
 const editdetails = async (req,res)=>{ 
    const data = req.body ;  
-   let email = data.email ;
+   let email = data.email ;   
+   console.log("data\n",data);
+    if(!email) return "Email not found in edit details" ;
+    
     try { 
     let user = await usercollection.findOneAndUpdate( 
         {"email":data.email} ,
@@ -55,18 +58,22 @@ const editdetails = async (req,res)=>{
                 "githublink":   data.githublink,
                 'ugDetails'      :data.ugDetails, 
                 'pgDetails'       :data.pgDetails, 
-                'experiences'     :data.experiences
+                'experiences'     :data.experiences, 
+                'projects'        :data.projects
             }
         } ,
-        { upsert: true, returnDocument: "after" })  
-         await redis_client.set(email,JSON.stringify(user),{ EX: 3600 })
-        console.log("user details in editdetails backend after update",user) 
+        { upsert: true, returnDocument: "after" })  ; 
+        try {
+            await redis_client.set(email,JSON.stringify(user),{ EX: 3600 })
+        } catch (error) {
+            console.error("Error while updating vlue in redis\n");
+        }
+     
     res.status(200).json(user)
    } catch (error) {
     res.status(500).json({"message":`Error while updating userdetails,${error}`})
    }
-   
-   
+
 }
 const checkindexing = async (req, res) => {
     try {

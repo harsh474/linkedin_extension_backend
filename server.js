@@ -21,8 +21,8 @@ const { createOrder, verifyPayment } = require('./Controllers/razorpayController
 const { payment_collection } = require('./Controllers/payment');
 const { authenticateToken, check_login, editdetails,checkindexing } = require('./Controllers/authenticatetoken')
 const { extractJobDetails } = require('./googleapi');
-const { usercollection, redis_client } = require('./db');
-const { generateApplicationEmail } = require('./prompt')
+const { usercollection, redis_client } = require('./db'); 
+const {generateEmail,generateEmail2}  = require('./Controllers/AI/generate_email')
 let SECRET_KEY = process.env.SECRET_KEY;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const FRONTEND_URL = 'https://www.jobmailer.in';
@@ -67,32 +67,7 @@ app.get('/', authenticateToken, async (req, res) => {
 
 app.set("trust proxy", 1); // trust first proxy
 
-app.post('/chatgpt', authenticateToken, async (req, res) => {
-    let email = req.user.email ;
-    const query = { email: email };
-    let cached = await redis_client.get(email)
-    let user = cached?JSON.parse(cached): await usercollection.findOne(query) ;  
-    !cached&&user&& await redis_client.set(email,JSON.stringify(user),{ EX: 3600 }) // this operation called short-circuiting trick
-    if (user.currentcount >= user.maxxcount) {
-        return res.status(410).json("You pack has expired, recharge Now")
-    }
-    let userMessage = req.body.message || "";
-    try {
-        const emailTemplate = await generateApplicationEmail(userMessage, user);
-        user = await usercollection.findOneAndUpdate(
-            { email: email },
-            {
-                $inc: {
-                    currentcount: 1
-                }
-            },
-            { upsert: true, returnDocument: "after" });
-            user&& await redis_client.set(email,JSON.stringify(user),{ EX: 3600 }) // this operation called short-circuiting trick
-        return res.status(200).json(emailTemplate);
-    } catch (error) {
-        return res.status(400).json(`error while writing  email ${error}`)
-    }
-});
+app.post('/chatgpt', authenticateToken,generateEmail);
 
 app.post('/signupform', async (req, res) => {
     const data = req.body.formdata;
@@ -119,7 +94,7 @@ app.post('/login', async (req, res) => {
         }
         // Find the user by email
         let cached  = await redis_client.get(email) ; 
-        console.log("cached in login",cached);
+       
         let user = cached ? JSON.parse(cached): await usercollection.findOne({ email: email });
  
         if (!user) {
@@ -160,7 +135,7 @@ app.get('/logout',authenticateToken, async (req, res) => {
         ...getCookieConfig(),
         maxAge: 0 // Immediate expiry
     });
-    await redis_client.delete(email)
+    await redis_client.del(email)
     res.status(200).send("User logout successfully");
 })
 
@@ -171,28 +146,7 @@ app.route('/create-order').post(createOrder);
 app.route('/verify-payment').post(verifyPayment);
 app.route('/payment').post(payment_collection);
 // --- Express Route for Email Generation ---
-app.post('/generate-email', authenticateToken, async (req, res) => {
-
-    let jobDescription = req.body.jobDescription || "";
-
-    let email = req.user.email ;
-    const query = { email: email }; 
-    let cached = redis_client(email) ; 
-
-    let applicantData = cached?JSON.parse(cached):await usercollection.findOne(query);
-    console.log()
-    if (!jobDescription || !applicantData) {
-        return res.status(400).json({ error: 'Both jobDescription and applicantData are required in the request body.' });
-    }
-    try {
-        const generatedEmail = await generateApplicationEmail(jobDescription, applicantData);
-        res.status(200).json(generatedEmail);
-    } catch (error) {
-        console.error('Error generating email:', error);
-        res.status(500).json({ error: 'Failed to generate email.', details: error.message });
-    }
-});
-
+app.post('/generate-email', authenticateToken, generateEmail2);
 app.get('/check-indexing',authenticateToken,checkindexing)
 // Start the server
 app.listen(PORT, () => {

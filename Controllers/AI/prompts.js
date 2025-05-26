@@ -115,6 +115,83 @@ also include personal information of applicant in the last of emailbody.
      13.If company name is not given then extract from the recruiter email 
 "`;
 
+// File: prompts.js
+
+const  getExtractionPrompt= (jobDescription, authorInfo = null) => {
+     return `
+   You are an expert recruiter and job post analyst.
+   
+   Your task is to extract all useful and relevant details from the following LinkedIn job post and author information in a structured JSON format that can be used to write a personalized and effective job application email.
+   
+   ---
+   
+   POST CONTENT:
+   """
+   ${jobDescription}
+   """
+   
+   AUTHOR INFO:
+   """
+   ${authorInfo || 'N/A'}
+   """
+   
+   ---
+   
+   ### Return JSON with the following fields if present:
+   - role
+   - company
+   - industry
+   - domain
+   - location
+   - experience_level_required
+   - target_graduation_years
+   - skills_required
+   - notice_period
+   - recruiter_name (try to infer from email if not present)
+   - recruiter_email (must be present, null if not available)
+   - perks
+   - application_instructions
+   - application_link
+   - questions
+   - tone (inferred)
+   - post_source (e.g., LinkedIn)
+   - post_type (e.g., Hiring Announcement)
+   
+   If any required field is missing, return it with value \`null\`. Analyze it like an HR. Only return valid JSON.
+     `;
+   }
+   
+   const getEmailPrompt= (jobData, userData) => {
+     return `
+   You are a professional recruiter and email copywriting expert.
+   
+   Your task is to write a clean, high-conversion job application email using the following structured job data and user profile data:
+   
+   ---
+   
+   JOB DATA:
+   ${JSON.stringify(jobData, null, 2)}
+   
+   USER DATA:
+   ${JSON.stringify(userData, null, 2)}
+   
+   ---
+   
+   ### Email Format:
+   1. Introduce the candidate with degree, year, current role
+   2. Highlight 1-2 of the most impactful experiences or projects relevant to the job's required skills
+   3. Match skills directly to job
+   4. Include the resume link in the body
+   5. Close professionally with contact info
+   6. Keep the tone based on job data's 'tone' field
+   
+   Note : Don't include subject in email body 
+
+   Only return the email body as plain formatted text.
+     `;
+   }
+   
+
 
 
 
@@ -127,5 +204,7 @@ module.exports = {
      promptStep6,
      promptStep7,
      promptStep10,
-     promptStep11,
+     promptStep11, 
+     getExtractionPrompt,
+     getEmailPrompt
  };
