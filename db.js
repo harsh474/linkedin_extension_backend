@@ -24,25 +24,25 @@ let mongo_url = "mongodb://localhost:27017/email";
 mongo_url = process.env.Mongo_url
 
 
-// mongoose.connect('mongodb://localhost:27017/email')
-mongoose.connect(`${mongo_url}`)
-    .then(async() => {console.log("succesfully connected to mongodb databse ");  
-        await mongoose.connection.db.collection('user').createIndex({email:1},{unique:true}); 
-        console.log(" Index on 'email' created");
-        })
-    .catch((error) => console.log("Cant connect to databse ",error)) 
+const connectToDatabase = async () => {
+  try {
+    await mongoose.connect(mongo_url);
+    console.log("✅ Successfully connected to MongoDB database");
 
+    await mongoose.connection.db.collection('user').createIndex({ email: 1 }, { unique: true });
+    console.log("✅ Index on 'email' created");
 
+    redis_client.on('error', err => console.error('Redis Client Error', err));
+    await redis_client.connect();
+    console.log("✅ Connected to Redis");
+  } catch (error) {
+    console.error("❌ Connection Error:", error);
+    redis_client = null; // fall back if Redis fails
+  }
+};
 
-( async()=>{
-try {
-        redis_client.on('error', err => console.log('Redis Client Error', err));
-        await redis_client.connect();
-        console.log(" Connected to Redis");
-} catch (error) {
-       console.warn("⚠️ Redis connection failed:", error.message);
-       redis_client = null; // so rest of code can skip Redis safely
-}})();
+connectToDatabase();
+
 const db =  mongoose.connection ;
 const usercollection = db.collection('user');
 const ordercollection = db.collection('orders') 
