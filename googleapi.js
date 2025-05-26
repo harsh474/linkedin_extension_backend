@@ -5,7 +5,6 @@ dotenv.config();
 const YOUR_API_KEY = process.env.GEMNI_API_KEY;
 const genAI = new GoogleGenerativeAI(YOUR_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-const { usercollection } = require('./db');
 
 const content = `
 Ritika KherataRitika Kherata
