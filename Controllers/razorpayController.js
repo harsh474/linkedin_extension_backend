@@ -82,7 +82,7 @@ const verifyPayment = async (req, res) => {
             $inc: { maxxcount: increment }
           },
           { upsert: true, returnDocument: "after" });
-        await redis_client.set(email_id,JSON.stringify(updatedcount),{ EX: 3600 });
+        if(redis_client)  await redis_client.set(email_id,JSON.stringify(updatedcount),{ EX: 3600 });
       } catch (error) {
         console.erro("Error while saving created  order", error); 
         return res.status(400).json("Error while creating and updating count and order in  varifyment")
@@ -93,7 +93,7 @@ const verifyPayment = async (req, res) => {
       res.status(400).json({ status: 'verification_failed' });
     }
   } catch (error) {
-    res.status(500).json({ status: 'error', message: 'Error verifying payment' });
+    res.status(500).json({ status: 'error', message: `Error verifying payment , ${error}` });
   }
 };
 

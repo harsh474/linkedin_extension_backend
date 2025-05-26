@@ -75,7 +75,7 @@ app.post('/signupform', async (req, res) => {
         let maxxcount = 10, currentcount = 0;
         // Ensure usercollection is defined and connected
         const user = await usercollection.insertOne({ ...data, maxxcount, currentcount });
-        user&& await redis_client.set(data.email,JSON.stringify(user),{ EX: 3600 }) // this operation called short-circuiting trick
+       if(redis_client) user&& await redis_client.set(data.email,JSON.stringify(user),{ EX: 3600 }) // this operation called short-circuiting trick
         res.status(201).json({ message: "Successfully saved user data", user });
     } catch (error) {
         console.error("Error while saving data:", error.message);
@@ -93,7 +93,8 @@ app.post('/login', async (req, res) => {
             return res.status(200).json({ "message": "User is already login" });
         }
         // Find the user by email
-        let cached  = await redis_client.get(email) ; 
+        let  cached ; 
+        if(redis_client ) cached  = await redis_client.get(email) ; 
        
         let user = cached ? JSON.parse(cached): await usercollection.findOne({ email: email });
  
@@ -135,7 +136,7 @@ app.get('/logout',authenticateToken, async (req, res) => {
         ...getCookieConfig(),
         maxAge: 0 // Immediate expiry
     });
-    await redis_client.del(email)
+    if(redis_client) await redis_client.del(email)
     res.status(200).send("User logout successfully");
 })
 

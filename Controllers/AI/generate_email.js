@@ -5,10 +5,11 @@ const { usercollection, redis_client } = require('../../db');
 const generateEmail = async (req,res)=>{ 
      let email = req.user.email ;
      const query = { email: email };
-     let cached = await redis_client.get(email)
+     let  cached ;  
+     if(redis_client)cached = await redis_client.get(email)
      let applicantData = cached?JSON.parse(cached): await usercollection.findOne(query) ;   
      let jobDescription = req.body.message || "";
-     !cached&&user&& await redis_client.set(email,JSON.stringify(user),{ EX: 3600 }) // this operation called short-circuiting trick 
+     redis_client&&!cached&&user&& await redis_client.set(email,JSON.stringify(user),{ EX: 3600 }) // this operation called short-circuiting trick 
      if (!jobDescription || !applicantData) {
           return res.status(400).json({ error: 'Both jobDescription and applicantData are required in the request body.' });
       }
@@ -26,7 +27,7 @@ const generateEmail = async (req,res)=>{
                  }
              },
              { upsert: true, returnDocument: "after" });
-             user&& await redis_client.set(email,JSON.stringify(user),{ EX: 3600 }) // this operation called short-circuiting trick
+             redis_client&&user&& await redis_client.set(email,JSON.stringify(user),{ EX: 3600 }) // this operation called short-circuiting trick
          return res.status(200).json(emailTemplate);
      } catch (error) {
           console.error('Error generating email:', error);
@@ -40,7 +41,8 @@ const generateEmail2 = async (req, res) => {
  
      let email = req.user.email ;
      const query = { email: email }; 
-     let cached = await redis_client.get(email) ; 
+     let cached   ; 
+     if(redis_client)cached = await redis_client.get(email) ; 
  
      let applicantData = cached?JSON.parse(cached):await usercollection.findOne(query);
    

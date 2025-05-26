@@ -29,10 +29,12 @@ const check_login = async (req,res)=>{
     let user_email = req.user.email ;
     const query = { email: req.user.email }; 
     let user ;
-    try {  
-      let cached = await redis_client.get(user_email) ; 
+    try {   
+     
+      let cached ; 
+      if (redis_client) cached =  await redis_client.get(user_email) ; 
       user = cached? JSON.parse(cached) :await usercollection.findOne(query) ;  
-      redis_client.set(user_email,JSON.stringify(user));
+      if (redis_client&& !cached) redis_client.set(user_email,JSON.stringify(user));
       res.status(200).json({ "message": user});
     } catch (error) {
         console.log("error while feteching user in checklogin api ",error); 
@@ -64,9 +66,9 @@ const editdetails = async (req,res)=>{
         } ,
         { upsert: true, returnDocument: "after" })  ; 
         try {
-            await redis_client.set(email,JSON.stringify(user),{ EX: 3600 })
+          if(redis_client)  await redis_client.set(email,JSON.stringify(user),{ EX: 3600 })
         } catch (error) {
-            console.error("Error while updating vlue in redis\n");
+            console.error("Error while updating vlue in redis\n",error);
         }
      
     res.status(200).json(user)
