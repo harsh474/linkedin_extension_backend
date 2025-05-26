@@ -10,14 +10,15 @@ const REDIS_PORT = process.env.REDIS_PORT
 const redis = require('redis');
 
 // Create Redis client with SSL and access key
-let redis_client = redis.createClient({
-  socket: {
-    host: HOST_NAME,
-    port: REDIS_PORT,
-    tls: true  // enables SSL (required for Azure)
-  },
-  password: PASSWORD  // access key from Azure
-}); 
+let redis_client 
+// redis_client = redis.createClient({
+//   socket: {
+//     host: HOST_NAME,
+//     port: REDIS_PORT,
+//     tls: true  // enables SSL (required for Azure)
+//   },
+//   password: PASSWORD  // access key from Azure
+// }); 
 
 const mongoose = require('mongoose');
 let mongo_url = "mongodb://localhost:27017/email";
@@ -32,12 +33,12 @@ const connectToDatabase = async () => {
     await mongoose.connection.db.collection('user').createIndex({ email: 1 }, { unique: true });
     console.log("✅ Index on 'email' created");
 
-    redis_client.on('error', err => console.error('Redis Client Error', err));
-    await redis_client.connect();
+    // redis_client.on('error', err => console.error('Redis Client Error', err));
+    // await redis_client.connect();
+    redis_client = null; // fall back if Redis fails
     console.log("✅ Connected to Redis");
   } catch (error) {
     console.error("❌ Connection Error:", error);
-    redis_client = null; // fall back if Redis fails
   }
 };
 

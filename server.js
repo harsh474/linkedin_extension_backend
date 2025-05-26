@@ -88,13 +88,14 @@ app.post('/signupform', async (req, res) => {
 app.post('/login', async (req, res) => {
     try {
 
-        const { email, pass } = req.body;
+        const { email, pass } = req.body; 
+        console.log("calling login api")
         if (req.cookies.token) {
             return res.status(200).json({ "message": "User is already login" });
         }
         // Find the user by email
         let  cached ; 
-        if(redis_client ) cached  = await redis_client.get(email) ; 
+        if(redis_client) cached  = await redis_client.get(email) ; 
        
         let user = cached ? JSON.parse(cached): await usercollection.findOne({ email: email });
  
