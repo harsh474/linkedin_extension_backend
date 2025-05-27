@@ -33,7 +33,7 @@ const getCookieConfig = () => {
         secure: NODE_ENV == 'production', // Only send over HTTPS in production
         sameSite: 'none', // Required for cross-domain cookies
         maxAge: COOKIE_MAX_AGE,
-        // domain: NODE_ENV === 'production' ? '.jobmailer.in' : 'localhost', // Use root domain in production
+        domain: 'localhost',
         path: '/'
     };
 };

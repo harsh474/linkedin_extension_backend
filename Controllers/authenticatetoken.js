@@ -1,14 +1,17 @@
 const jwt = require('jsonwebtoken') ; 
 const { usercollection, redis_client } = require('../db');
 let SECRET_KEY = process.env.SECRET_KEY;
-const authenticateToken = async (req, res, next) => {
-   
-    let token = req.cookies.token;
-    if (!token) {
+const authenticateToken = async (req, res, next) => { 
+    console.log("req\n",req)
+    let token = req.cookies.token; 
+    if (!token) {  
+        console.log("token is not found in request",token)
         return res.status(401).json({"You are not logged in": token});
+    } 
+    else{ 
+       console.log("Authentication in progress...");
     }
-    console.log("Authentication in progress...");
-
+    
     jwt.verify(token, SECRET_KEY, (error, user) => {
         if (error) {
             console.log("JWT Error:", error);
@@ -25,16 +28,17 @@ const authenticateToken = async (req, res, next) => {
     });
 };
  
-const check_login = async (req,res)=>{   
+const check_login = async (req,res)=>{    
+    console.log("check_login is calling")
     let user_email = req.user.email ;
     const query = { email: req.user.email }; 
     let user ;
     try {   
-     
       let cached ; 
       if (redis_client) cached =  await redis_client.get(user_email) ; 
       user = cached? JSON.parse(cached) :await usercollection.findOne(query) ;  
-      if (redis_client&& !cached) redis_client.set(user_email,JSON.stringify(user));
+      if (redis_client&& !cached) redis_client.set(user_email,JSON.stringify(user)); 
+      console.log("user",user);
       res.status(200).json({ "message": user});
     } catch (error) {
         console.log("error while feteching user in checklogin api ",error); 
