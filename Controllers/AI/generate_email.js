@@ -37,7 +37,7 @@ const generateEmail = async (req,res)=>{
 } 
 const generateEmail2 = async (req, res) => {
      console.log(" calling generateEmail2")
-     let jobDescription = req.body.jobDescription || "";
+     let jobDescription = req.body.message || "";
  
      let email = req.user.email ;
      const query = { email: email }; 
