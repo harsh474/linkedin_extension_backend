@@ -33,7 +33,6 @@ const getCookieConfig = () => {
         secure: NODE_ENV == 'production', // Only send over HTTPS in production
         sameSite: 'none', // Required for cross-domain cookies
         maxAge: COOKIE_MAX_AGE,
-        domain: 'localhost',
         path: '/'
     };
 };
