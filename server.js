@@ -13,9 +13,9 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-    origin: ['http://localhost:3000', 'chrome-extension://mggcnpciocmgadnfpkooinmkgikobmoi'],
+    origin: ['http://localhost:3000', 'chrome-extension://mggcnpciocmgadnfpkooinmkgikobmoi',  'https://www.jobmailer.in'],
     credentials: true,            //access-control-allow-credentials:true
-    optionSuccessStatus: 200
+    optionsSuccessStatus: 200
 }));
 const { createOrder, verifyPayment } = require('./Controllers/razorpayController');
 const { payment_collection } = require('./Controllers/payment');
