@@ -89,6 +89,10 @@ const checkindexing = async (req, res) => {
         console.error("Error fetching indexes:", error);
         res.status(500).json({ error: "Failed to fetch indexes" });
     }
-};
+}; 
+
+const extract_details_from_post = async(req,res)=>{
+    
+}
 
 module.exports = {authenticateToken,check_login,editdetails,checkindexing} ; 

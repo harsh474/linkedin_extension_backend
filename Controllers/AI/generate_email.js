@@ -1,6 +1,8 @@
 
 const { generateApplicationEmail,generateApplicationEmail2 } = require('./prompt');
 const { usercollection, redis_client } = require('../../db'); 
+const axios = require('axios');
+const { error } = require('console');
 
 const generateEmail = async (req,res)=>{ 
      let email = req.user.email ;
@@ -36,22 +38,40 @@ const generateEmail = async (req,res)=>{
 
 } 
 const generateEmail2 = async (req, res) => {
-     console.log(" calling generateEmail2")
+     console.log("calling generateEmail2",req)
      let jobDescription = req.body.message || "";
- 
-     let email = req.user.email ;
+     let email = req.user.email ; 
+     console.log("email+++++++++++++++++++",email)
      const query = { email: email }; 
      let cached   ; 
-     if(redis_client)cached = await redis_client.get(email) ; 
+    //  if(redis_client)cached = await redis_client.get(email) ; 
  
      let applicantData = cached?JSON.parse(cached):await usercollection.findOne(query);
    
      if (!jobDescription || !applicantData) {
          return res.status(400).json({ error: 'Both jobDescription and applicantData are required in the request body.' });
      }
-     try {
-         const generatedEmail = await generateApplicationEmail2(jobDescription, applicantData);
-         res.status(200).json(generatedEmail);
+     try { 
+         const webhook_url = "http://localhost:5678/webhook-test/abb22633-63c1-4299-9b67-8a5c8798f157" ; 
+         const payload = { 
+            event:"Generate Mail", 
+            data:{ 
+                "jobDescription":jobDescription,
+                "applicantData":applicantData
+            }
+         } 
+         axios.get(webhook_url,payload)
+         .then((response)=>{ 
+            console.log("Webhook succesfully called",response.data['0'])  
+            let generatedEmail  = response.data['0'] ; 
+             res.status(200).json(generatedEmail);
+         })
+         .catch((error)=>{ 
+            console.log('Error Calling Webhook',error.message);
+             res.status(500).json({ error: 'Failed to generate email.', details: error.message });
+         })
+        //  const generatedEmail = await generateApplicationEmail2(jobDescription, applicantData);
+        //  res.status(200).json(generatedEmail);
      } catch (error) {
          console.error('Error generating email:', error);
          res.status(500).json({ error: 'Failed to generate email.', details: error.message });

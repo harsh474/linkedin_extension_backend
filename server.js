@@ -148,8 +148,9 @@ app.route('/verify-payment').post(verifyPayment);
 app.route('/payment').post(payment_collection);
 // --- Express Route for Email Generation ---
 app.post('/generate-email', authenticateToken, generateEmail2);
-app.get('/check-indexing',authenticateToken,checkindexing)
-// Start the server
+app.get('/check-indexing',authenticateToken,checkindexing);
+// Start the server 
+// app.get('/extract_details_from_post',extract_details_from_post)
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
