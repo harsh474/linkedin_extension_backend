@@ -38,7 +38,6 @@ const check_login = async (req,res)=>{
       if (redis_client) cached =  await redis_client.get(user_email) ; 
       user = cached? JSON.parse(cached) :await usercollection.findOne(query) ;  
       if (redis_client&& !cached) redis_client.set(user_email,JSON.stringify(user)); 
-      console.log("user",user);
       res.status(200).json({ "message": user});
     } catch (error) {
         console.log("error while feteching user in checklogin api ",error); 
