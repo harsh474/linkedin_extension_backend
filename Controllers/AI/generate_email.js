@@ -53,7 +53,7 @@ const generateEmail2 = async (req, res) => {
      }
      try { 
          let webhook_url = "http://localhost:5678/webhook-test/abb22633-63c1-4299-9b67-8a5c8798f157" ;  
-         webhook_url = "http://0.0.0.0:5678/webhook/abb22633-63c1-4299-9b67-8a5c8798f157" ; 
+           webhook_url = "http://13.60.205.45:5678/webhook/abb22633-63c1-4299-9b67-8a5c8798f157";
          const payload = { 
             event:"Generate Mail", 
             data:{ 
